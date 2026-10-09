@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v48 - Modal de Data da Baixa -->
+<!-- GESTAOERP MCloud v49 - Movimento compacto + Retenções por Item -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -2386,6 +2386,339 @@ window.MCLOUD_CONFIG = {
 }
 </style>
 
+
+<style id="movimento-compacto-tributos-v49">
+/* ===== Movimento mais proporcional ===== */
+#mvModal.mv-main-modal{
+  width:min(1120px,calc(100vw - 48px)) !important;
+  height:min(700px,calc(100vh - 44px)) !important;
+  border-radius:10px !important;
+}
+
+/* título e toolbar mais enxutos */
+#mvModal > .mv-title{
+  flex:0 0 42px !important;
+  height:42px !important;
+  min-height:42px !important;
+  padding:0 14px !important;
+  font-size:15px !important;
+}
+#mvModal > .mv-title button{
+  width:34px !important;
+  height:34px !important;
+  font-size:21px !important;
+  border-radius:6px !important;
+}
+#mvModal > .mv-mtoolbar{
+  flex:0 0 43px !important;
+  height:43px !important;
+  min-height:43px !important;
+  padding:0 12px !important;
+  gap:4px !important;
+}
+#mvModal > .mv-mtoolbar button{
+  width:28px !important;
+  min-width:28px !important;
+  height:28px !important;
+  font-size:17px !important;
+  line-height:28px !important;
+  border-radius:5px !important;
+}
+#mvModal > .mv-mtoolbar span:not(.spacer){
+  font-size:12px !important;
+  margin-right:4px !important;
+}
+
+/* menu lateral compacto: grupos próximos uns dos outros */
+#mvModal .mv-side{
+  flex:0 0 172px !important;
+  width:172px !important;
+  padding:8px 7px 10px !important;
+  background:#f5f9fc !important;
+}
+#mvModal .mv-side .group{
+  margin:6px 9px 2px !important;
+  padding:0 !important;
+  font-size:10.5px !important;
+  line-height:16px !important;
+  letter-spacing:.15px !important;
+  color:#536d82 !important;
+}
+#mvModal .mv-side .group:not(:first-child){
+  margin-top:7px !important;
+}
+#mvModal .mv-side button{
+  min-height:31px !important;
+  height:31px !important;
+  margin:1px 0 !important;
+  padding:5px 10px 5px 14px !important;
+  border-radius:5px !important;
+  font-size:12px !important;
+  line-height:20px !important;
+}
+#mvModal .mv-side button.active::before{
+  top:4px !important;
+  bottom:4px !important;
+  width:3px !important;
+}
+
+/* conteúdo também em escala de ERP desktop */
+#mvModal .mv-pane{
+  padding:13px 15px 12px !important;
+}
+#mvModal .mv-status-card{
+  gap:16px !important;
+  margin-bottom:12px !important;
+  padding:10px 16px !important;
+  border-radius:6px !important;
+}
+#mvModal .mv-status-card > div,
+#mvModal .mv-status-card b,
+#mvModal .mv-status-card span{
+  font-size:12px !important;
+}
+#mvModal .mv-box{
+  margin-top:11px !important;
+  padding:16px 14px 11px !important;
+  border-radius:6px !important;
+}
+#mvModal .mv-box-title{
+  top:-9px !important;
+  font-size:12px !important;
+  line-height:18px !important;
+}
+#mvModal .mv-form{
+  gap:9px 10px !important;
+}
+#mvModal .mv-field{
+  gap:3px !important;
+}
+#mvModal .mv-field label{
+  font-size:11px !important;
+}
+#mvModal .mv-field input,
+#mvModal .mv-field select{
+  height:32px !important;
+  min-height:32px !important;
+  padding:0 8px !important;
+  border-radius:5px !important;
+  font-size:12px !important;
+}
+#mvModal .mv-field textarea{
+  height:76px !important;
+  min-height:76px !important;
+  padding:7px 8px !important;
+  font-size:12px !important;
+}
+#mvModal .mv-summary{
+  gap:10px !important;
+  margin-top:13px !important;
+  padding:11px 8px 3px !important;
+}
+#mvModal .mv-summary div{font-size:11px !important}
+#mvModal .mv-summary b{
+  margin-top:3px !important;
+  font-size:14px !important;
+}
+#mvModal th{
+  height:31px !important;
+  padding:5px 7px !important;
+  font-size:11px !important;
+}
+#mvModal td{
+  padding:5px 7px !important;
+  font-size:11px !important;
+}
+#mvModal .mv-note{
+  margin-top:9px !important;
+  padding:8px 10px !important;
+  border-radius:6px !important;
+  font-size:11px !important;
+}
+#mvModal > .mv-footer{
+  flex:0 0 51px !important;
+  height:51px !important;
+  min-height:51px !important;
+  gap:8px !important;
+  padding:0 13px !important;
+}
+#mvModal > .mv-footer button{
+  min-width:82px !important;
+  height:32px !important;
+  padding:0 13px !important;
+  border-radius:5px !important;
+  font-size:12px !important;
+}
+
+/* Item de Movimento com abas */
+#mvItemModal.mv-item-modal{
+  width:min(820px,calc(100vw - 70px)) !important;
+  height:min(590px,calc(100vh - 80px)) !important;
+}
+.mvi-tabs{
+  flex:0 0 35px;
+  display:flex;
+  align-items:flex-end;
+  gap:2px;
+  padding:5px 10px 0;
+  border-bottom:1px solid #d2dce4;
+  background:#f7fafc;
+}
+.mvi-tabs button{
+  height:30px;
+  padding:0 16px;
+  border:1px solid transparent;
+  border-bottom:0;
+  border-radius:6px 6px 0 0;
+  background:transparent;
+  color:#315672;
+  font:12px "Segoe UI",Arial,sans-serif;
+  cursor:pointer;
+}
+.mvi-tabs button.active{
+  background:#fff;
+  border-color:#cbd8e2;
+  color:#0d65b5;
+  font-weight:700;
+}
+.mvi-pane{
+  display:none;
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  padding:15px;
+  background:#fff;
+}
+.mvi-pane.active{display:block}
+.mvi-retention-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.mvi-retention-check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:12px;
+  color:#17365e;
+  font-weight:600;
+}
+.mvi-ret-toolbar{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.mvi-ret-toolbar button{
+  width:30px;
+  height:28px;
+  border:1px solid #c4d4df;
+  border-radius:5px;
+  background:#fff;
+  color:#0c66b5;
+  cursor:pointer;
+}
+.mvi-ret-toolbar button:hover{background:#edf6fd}
+.mvi-ret-grid{
+  height:290px;
+  overflow:auto;
+  border:1px solid #d1dde6;
+  border-radius:6px;
+  background:#fff;
+}
+.mvi-ret-grid table{
+  width:100%;
+  border-collapse:collapse;
+  font:11px "Segoe UI",Arial,sans-serif;
+}
+.mvi-ret-grid th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  height:30px;
+  padding:5px 7px;
+  background:#f4f8fb;
+  color:#315b7a;
+  text-align:left;
+  border-bottom:1px solid #d4e0e9;
+  white-space:nowrap;
+}
+.mvi-ret-grid td{
+  height:29px;
+  padding:5px 7px;
+  border-bottom:1px solid #e7edf2;
+  color:#29475f;
+}
+.mvi-ret-grid tr.selected td{background:#ddecf8}
+.mvi-ret-grid .num{text-align:right}
+.mvi-ret-total{
+  margin-top:10px;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:8px;
+  color:#17365e;
+  font-size:12px;
+}
+.mvi-ret-total b{font-size:14px}
+
+/* editor da retenção */
+#mviRetentionModal{
+  width:min(610px,calc(100vw - 80px)) !important;
+  height:min(430px,calc(100vh - 100px)) !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  z-index:22000 !important;
+}
+#mviRetentionModal.show{
+  display:flex !important;
+  z-index:22000 !important;
+}
+.mvi-ret-form{
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:11px;
+  padding:18px;
+  background:#fff;
+  flex:1;
+  overflow:auto;
+}
+.mvi-ret-field{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.mvi-ret-field label{
+  font-size:11px;
+  color:#17365e;
+  font-weight:600;
+}
+.mvi-ret-field input,
+.mvi-ret-field select{
+  width:100%;
+  height:33px;
+  box-sizing:border-box;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  padding:0 8px;
+  background:#fff;
+  color:#17365e;
+  font:12px "Segoe UI",Arial,sans-serif;
+}
+.mvi-ret-field input[readonly]{background:#f4f7f9}
+.mvi-ret-help{
+  grid-column:1/-1;
+  padding:9px 10px;
+  border:1px solid #d6e2eb;
+  border-radius:6px;
+  background:#f7fbfe;
+  color:#587186;
+  font-size:11px;
+}
+</style>
+
 </head>
 <body>
 
@@ -3840,6 +4173,7 @@ render();
 (() => {
 const MOV_KEY='rm_movimentos_v12', FIN_KEY='rm_lancamentos_financeiros_v12', TM_KEY_V12='rm_tipos_movimento_v1', PROD_KEY_V12='rm_produtos_v9', CF_KEY_V12='rm_clientes_fornecedores_v9', CC_KEY_V12='rm_centros_custos_v1', PAY_KEY_V15='rm_meios_pagamento_v9', PCOND_KEY='rm_condicoes_pagamento_v15';
 let mvItems=rmLoad(MOV_KEY,[]), finItems=rmLoad(FIN_KEY,[]), payCondItems=rmLoad(PCOND_KEY,[]), mvSel=null, finSel=null, mvEdit=null, finEdit=null, mvDraft=null, mvItemEdit=null, payCondEdit=null;
+let mvItemRetentionDraft=[], mvItemRetentionSel=null, mvItemRetentionEdit=null;
 const $=id=>document.getElementById(id), load=k=>rmLoad(k,[]), saveMov=()=>rmSave(MOV_KEY,mvItems), saveFin=()=>rmSave(FIN_KEY,finItems);
 const money=n=>rmMoney(Number(n)||0), parseMoney=s=>rmParseMoney(String(s||''));
 const today=()=>new Date().toISOString().slice(0,10), plusDays=(d,n)=>{const x=new Date((d||today())+'T12:00:00');x.setDate(x.getDate()+(Number(n)||0));return x.toISOString().slice(0,10)};
@@ -3868,15 +4202,117 @@ document.body.insertAdjacentHTML('beforeend',`
 <div class="mv-pane" data-mvcontent="tables"><div class="mv-form"><div class="mv-field" style="grid-column:1/-1"><label>Centro de Custo:</label><select id="mvCost"></select></div></div></div>
 <div class="mv-pane mv-finance-pane" data-mvcontent="financial"><div class="mv-fin-grid"><table><thead><tr><th style="width:30px">[x]</th><th>Data Vencimento</th><th>Valor</th><th>Débito/Crédito</th><th>Forma Pagamento</th></tr></thead><tbody id="mvInstallmentBody"></tbody></table></div><div class="mv-fin-selection"><div class="mv-fin-selection-title">Seleção de Meios de Pagamentos</div><div class="mv-fin-row"><label>Forma de Pagamento:</label><select id="mvPaymentMethodId"></select><button type="button" id="mvPaymentLookup">...</button><button type="button" id="mvPaymentTotals">Totais</button></div><div class="mv-fin-row"><label>Condição de Pagamento:</label><select id="mvPaymentConditionId"></select><button type="button" id="mvPaymentConditionNew" title="Cadastrar nova condição">＋</button><button type="button" id="mvGenerateInstallments">Gerar</button></div><div class="mv-fin-row account"><label>Conta/Caixa:</label><input id="mvCashAccount" readonly><button type="button" id="mvCashLookup">...</button></div><div class="mv-fin-row account"><label>Natureza:</label><input id="mvNature"><span></span></div><div class="mv-fin-row account"><label>Histórico Financeiro:</label><input id="mvFinHistory"><span></span></div></div><div class="mv-fin-totals"><span>Valor Bruto:<b id="mvFinGross">0,00</b></span><span>Subtotal:<b id="mvFinSubtotal">0,00</b></span><span>Valor do Documento:<b id="mvFinDoc">0,00</b></span></div></div>
 <div class="mv-pane" data-mvcontent="fiscal"><div class="mv-note">Área fiscal preparada para as próximas regras do movimento.</div></div>
-<div class="mv-pane" data-mvcontent="items"><div class="mv-subtoolbar"><button id="mvItemNew">＋</button><button id="mvItemEdit">✎</button><button id="mvItemDelete">✖</button><span style="margin-left:8px">Itens do movimento</span></div><div class="mv-inner-grid"><table><thead><tr><th>Nº Sequencial</th><th>Produto</th><th>Descrição Produto</th><th>Unidade</th><th>Quantidade</th><th>Preço Unitário</th><th>Valor do Item</th></tr></thead><tbody id="mvItemBody"></tbody></table></div></div>
+<div class="mv-pane" data-mvcontent="items"><div class="mv-subtoolbar"><button id="mvItemNew">＋</button><button id="mvItemEdit">✎</button><button id="mvItemDelete">✖</button><span style="margin-left:8px">Itens do movimento</span></div><div class="mv-inner-grid"><table><thead><tr><th>Nº Sequencial</th><th>Produto</th><th>Descrição Produto</th><th>Unidade</th><th>Quantidade</th><th>Preço Unitário</th><th>Valor do Item</th><th>Retenções</th></tr></thead><tbody id="mvItemBody"></tbody></table></div></div>
 <div class="mv-pane" data-mvcontent="values"><div class="mv-box"><div class="mv-box-title">Valores</div><div class="mv-summary"><div>Valor Bruto:<b id="mvGross2">0,00</b></div><div>Descontos:<b>0,00</b></div><div>Subtotal:<b id="mvSubtotal2">0,00</b></div><div>Valor Documento:<b id="mvDocTotal2">0,00</b></div></div></div></div>
 <div class="mv-pane" data-mvcontent="costshare"><div class="mv-note">O centro de custo do cabeçalho será usado no lançamento financeiro gerado. Rateios detalhados poderão ser adicionados posteriormente.</div></div>
 <div class="mv-pane" data-mvcontent="obs"><div class="mv-field"><label>Observações:</label><textarea id="mvObs"></textarea></div></div>
 <div class="mv-pane" data-mvcontent="finlaunch"><div class="mv-subtoolbar"><button id="mvOpenGeneratedFin">↗ Abrir lançamento</button><span style="margin-left:8px">Lançamento financeiro vinculado ao movimento</span></div><div class="mv-inner-grid"><table><thead><tr><th>Centro de Custo</th><th>Data Emissão</th><th>Documento</th><th>Histórico</th><th>Valor Original</th><th>Valor Baixado</th><th>Vencimento</th></tr></thead><tbody id="mvFinBody"></tbody></table></div></div>
-<div class="mv-pane" data-mvcontent="accounting"><div class="mv-box"><div class="mv-box-title">Contabilização</div><div class="mv-form"><div class="mv-field" style="grid-column:1/-1"><label>Lote definido no Tipo de Movimento:</label><input id="mvAccountingLot" readonly></div></div><div class="mv-note"><b>Prioridade contábil:</b> o Default do Tipo de Movimento prevalece por lado. O lado que não estiver definido no Tipo é completado pelo Default da Natureza Orçamentária/Financeira do Produto/Serviço.</div><div class="mv-account-grid"><table><thead><tr><th>Origem do Default</th><th>Item/Natureza</th><th>Débito</th><th>Crédito</th><th>Centro de Custo</th><th>Histórico</th><th>Valor</th></tr></thead><tbody id="mvAccountingBody"></tbody></table></div><div class="mv-account-summary"><span>Débitos: <b id="mvAccountingDebit">0,00</b></span><span>Créditos: <b id="mvAccountingCredit">0,00</b></span><span>Diferença: <b id="mvAccountingDiff">0,00</b></span></div></div></div>
+<div class="mv-pane" data-mvcontent="accounting"><div class="mv-box"><div class="mv-box-title">Contabilização</div><div class="mv-form"><div class="mv-field" style="grid-column:1/-1"><label>Lote definido no Tipo de Movimento:</label><input id="mvAccountingLot" readonly></div></div><div class="mv-note"><b>Prioridade contábil:</b> o Default do Tipo de Movimento prevalece por lado. O lado que não estiver definido no Tipo é completado pelo Default da Natureza Orçamentária/Financeira do Produto/Serviço.<br><b>Retenções dos itens:</b> cada retenção gera um crédito na conta informada no item. A soma das retenções é abatida do crédito principal do movimento, preservando o valor total da contabilização.</div><div class="mv-account-grid"><table><thead><tr><th>Origem do Default</th><th>Item/Natureza</th><th>Débito</th><th>Crédito</th><th>Centro de Custo</th><th>Histórico</th><th>Valor</th></tr></thead><tbody id="mvAccountingBody"></tbody></table></div><div class="mv-account-summary"><span>Débitos: <b id="mvAccountingDebit">0,00</b></span><span>Créditos: <b id="mvAccountingCredit">0,00</b></span><span>Diferença: <b id="mvAccountingDiff">0,00</b></span></div></div></div>
 <div class="mv-pane" data-mvcontent="queries"><div class="mv-note">Consulta dos movimentos relacionados ao cliente/fornecedor selecionado.</div></div>
 </div></div><div class="mv-footer"><button id="mvOk">OK</button><button id="mvCancel">Cancelar</button><button id="mvSave">Salvar</button></div></div>
-<div class="mv-modal mv-item-modal" id="mvItemModal"><div class="mv-title"><span id="mvItemTitle">Item de Movimento: &lt;novo&gt;</span><button id="mvItemClose">×</button></div><div class="mv-mtoolbar"><button>＋</button><button>✖</button><button>↑</button><button>⌃</button><button>⌄</button><button>↓</button></div><div style="padding:14px;background:#fff;flex:1;overflow:auto"><div class="mv-form"><div class="mv-field" style="grid-column:span 3"><label>Nº Identificador:</label><input id="mviIdentifier" readonly></div><div class="mv-field" style="grid-column:span 3"><label>Nº Sequencial:</label><input id="mviSeq" readonly></div><div class="mv-field" style="grid-column:1/-1"><label>Produto:</label><select id="mviProduct"></select></div><div class="mv-field" style="grid-column:1/-1"><label>Descrição Completa do Item:</label><input id="mviDescription"></div><div class="mv-field" style="grid-column:span 3"><label>Unidade:</label><input id="mviUnit" value="UN"></div><div class="mv-field" style="grid-column:span 3"><label>Quantidade:</label><input id="mviQty" inputmode="decimal"></div><div class="mv-field" style="grid-column:span 3"><label>Preço Unitário:</label><input id="mviPrice" inputmode="decimal"></div><div class="mv-field" style="grid-column:span 3"><label>Valor do Item:</label><input id="mviTotal" readonly></div></div></div><div class="mv-footer"><button id="mvItemOk">OK</button><button id="mvItemCancel">Cancelar</button><button id="mvItemSave">Salvar</button></div></div>
+
+<div class="mv-modal mv-item-modal" id="mvItemModal">
+  <div class="mv-title">
+    <span id="mvItemTitle">Item de Movimento: &lt;novo&gt;</span>
+    <button id="mvItemClose">×</button>
+  </div>
+  <div class="mv-mtoolbar">
+    <button>＋</button><button>✖</button><button>↑</button><button>⌃</button><button>⌄</button><button>↓</button>
+  </div>
+  <div class="mvi-tabs">
+    <button class="active" data-mvitab="item">Item</button>
+    <button data-mvitab="taxes">Tributos</button>
+  </div>
+
+  <div class="mvi-pane active" data-mvipane="item">
+    <div class="mv-form">
+      <div class="mv-field" style="grid-column:span 3"><label>Nº Identificador:</label><input id="mviIdentifier" readonly></div>
+      <div class="mv-field" style="grid-column:span 3"><label>Nº Sequencial:</label><input id="mviSeq" readonly></div>
+      <div class="mv-field" style="grid-column:1/-1"><label>Produto:</label><select id="mviProduct"></select></div>
+      <div class="mv-field" style="grid-column:1/-1"><label>Descrição Completa do Item:</label><input id="mviDescription"></div>
+      <div class="mv-field" style="grid-column:span 3"><label>Unidade:</label><input id="mviUnit" value="UN"></div>
+      <div class="mv-field" style="grid-column:span 3"><label>Quantidade:</label><input id="mviQty" inputmode="decimal"></div>
+      <div class="mv-field" style="grid-column:span 3"><label>Preço Unitário:</label><input id="mviPrice" inputmode="decimal"></div>
+      <div class="mv-field" style="grid-column:span 3"><label>Valor do Item:</label><input id="mviTotal" readonly></div>
+    </div>
+  </div>
+
+  <div class="mvi-pane" data-mvipane="taxes">
+    <div class="mvi-retention-head">
+      <label class="mvi-retention-check">
+        <input type="checkbox" id="mviHasRetention">
+        Este item sofre retenção
+      </label>
+      <div class="mvi-ret-toolbar">
+        <button type="button" id="mviRetNew" title="Adicionar retenção">＋</button>
+        <button type="button" id="mviRetEdit" title="Editar retenção">✎</button>
+        <button type="button" id="mviRetDelete" title="Excluir retenção">✖</button>
+      </div>
+    </div>
+    <div class="mvi-ret-grid">
+      <table>
+        <thead>
+          <tr>
+            <th>Retenção</th>
+            <th>Conta Contábil do Crédito</th>
+            <th>Base de Cálculo</th>
+            <th>Alíquota</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody id="mviRetBody"></tbody>
+      </table>
+    </div>
+    <div class="mvi-ret-total">
+      <span>Total das Retenções:</span>
+      <b id="mviRetTotal">0,00</b>
+    </div>
+  </div>
+
+  <div class="mv-footer">
+    <button id="mvItemOk">OK</button>
+    <button id="mvItemCancel">Cancelar</button>
+    <button id="mvItemSave">Salvar</button>
+  </div>
+</div>
+
+<div class="mv-modal" id="mviRetentionModal">
+  <div class="mv-title">
+    <span id="mviRetentionTitle">Retenção: &lt;nova&gt;</span>
+    <button id="mviRetentionClose">×</button>
+  </div>
+  <div class="mvi-ret-form">
+    <div class="mvi-ret-field" style="grid-column:1/-1">
+      <label>Nome da Retenção:</label>
+      <input id="mviRetName" placeholder="Ex.: INSS, IRRF, ISS, PCC">
+    </div>
+    <div class="mvi-ret-field" style="grid-column:1/-1">
+      <label>Conta Contábil do Crédito:</label>
+      <select id="mviRetCreditAccount"></select>
+    </div>
+    <div class="mvi-ret-field" style="grid-column:span 5">
+      <label>Base de Cálculo:</label>
+      <input id="mviRetBase" inputmode="decimal">
+    </div>
+    <div class="mvi-ret-field" style="grid-column:span 3">
+      <label>Alíquota (%):</label>
+      <input id="mviRetRate" inputmode="decimal">
+    </div>
+    <div class="mvi-ret-field" style="grid-column:span 4">
+      <label>Valor da Retenção:</label>
+      <input id="mviRetValue" readonly>
+    </div>
+    <div class="mvi-ret-help">
+      Valor da retenção = Base de Cálculo × Alíquota ÷ 100.
+      É possível cadastrar várias retenções para o mesmo item.
+    </div>
+  </div>
+  <div class="mv-footer">
+    <button id="mviRetentionOk">OK</button>
+    <button id="mviRetentionCancel">Cancelar</button>
+  </div>
+</div>
+
 <div class="mv-modal pc-modal" id="payCondModal"><div class="mv-title"><span id="payCondTitle">Condição de Pagamento: &lt;novo&gt;</span><button id="payCondClose">×</button></div><div class="mv-mtoolbar"><button>＋</button><button>✖</button><button>↻</button><button>↑</button><button>⌃</button><button>⌄</button><button>↓</button><span class="spacer"></span><button>📎</button><span>Anexos⌄</span></div><div class="pc-tabs"><button class="active" data-paycondtab="ident">Identificação</button><button data-paycondtab="compose">Composição das Parcelas</button></div><div class="pc-pane active" data-paycondpane="ident"><div class="pc-ident-grid"><div class="pc-field" style="grid-column:span 2"><label>Código:</label><input id="payCondCode"></div><div class="pc-field" style="grid-column:span 7"><label>Descrição:</label><input id="payCondDesc"></div><div class="pc-field" style="grid-column:span 3"><label>Deflator:</label><input id="payCondDeflator"></div></div><div style="display:grid;grid-template-columns:170px 1fr 145px;gap:28px;margin-top:20px"><fieldset class="pc-group"><legend>Arredondamento</legend><div class="pc-field"><label>Moeda:</label><select id="payCondCurrency"><option value="">Selecione...</option><option>R$ - Real</option></select></div></fieldset><fieldset class="pc-group"><legend>Fórmulas de Preço</legend><div class="pc-field"><label>Preço 01:</label><input id="payCondPrice1"></div><div class="pc-field" style="margin-top:8px"><label>Preço 02:</label><input id="payCondPrice2"></div></fieldset><fieldset class="pc-group"><legend>Juros</legend><div class="pc-field"><label>Taxa de Juros (a.m.):</label><input id="payCondInterest" inputmode="decimal"></div><label style="display:block;margin-top:12px;font-size:10px"><input type="checkbox" id="payCondCompound"> Juros Composto</label></fieldset></div><div class="pc-ident-grid" style="margin-top:16px"><div class="pc-field" style="grid-column:span 6"><label>Capitalização Mensal:</label><input id="payCondCapitalization"></div><div class="pc-field" style="grid-column:span 6"><label>Fórmula 1ª Parcela:</label><input id="payCondFirstFormula"></div><div class="pc-field" style="grid-column:span 6"><label>Meio de Pagamento:</label><select id="payCondPaymentMethod"></select></div><div style="grid-column:span 6;align-self:end;font-size:10px"><label><input type="checkbox" id="payCondPurchase"> Compra</label>&nbsp;&nbsp;<label><input type="checkbox" id="payCondSale" checked> Venda</label>&nbsp;&nbsp;<label><input type="checkbox" id="payCondInactive"> Inativo</label></div></div></div><div class="pc-pane" data-paycondpane="compose"><table class="pc-compose"><thead><tr><th></th><th>% do valor total</th><th>Número de vezes</th><th>Prazo</th><th>Intervalo</th><th>Tipo</th><th>Contagem</th></tr></thead><tbody id="payCondComposeBody"></tbody></table></div><div class="mv-footer"><button id="payCondOk">OK</button><button id="payCondCancel">Cancelar</button><button id="payCondSaveBtn">Salvar</button></div></div>
 <div class="mv-modal mv-fin-modal" id="finModal"><div class="mv-title"><span id="finTitle">Lançamento</span><button id="finClose">×</button></div><div class="mv-mtoolbar"><button>↻</button><button>↑</button><button>⌃</button><button>⌄</button><button>↓</button><span class="spacer"></span><button>📎</button><span>Anexos⌄</span><button>⚙</button><span>Processos⌄</span></div><div class="mv-tabs"><button class="active" data-fintab="ident">Identificação</button><button data-fintab="values">Valores</button><button data-fintab="bank">Integração Bancária</button><button data-fintab="fiscal">Integração Fiscal</button><button data-fintab="additional">Adicionais</button></div><div class="mv-tabpane active" data-fincontent="ident"><div id="finSourceBox" class="mv-note"></div><div class="mv-form" style="margin-top:10px"><div class="mv-field" style="grid-column:span 4"><label>Data de Emissão:</label><input type="date" id="finIssue"></div><div class="mv-field" style="grid-column:span 4"><label>Número Documento:</label><input id="finDocument"></div><div class="mv-field" style="grid-column:span 4"><label>Vencimento:</label><input type="date" id="finDue"></div><div class="mv-field" style="grid-column:1/-1"><label>Cliente / Fornecedor:</label><input id="finParty"></div><div class="mv-field" style="grid-column:1/-1"><label>Centro de Custo:</label><input id="finCost"></div><div class="mv-field" style="grid-column:1/-1"><label>Histórico:</label><textarea id="finHistory"></textarea></div></div></div><div class="mv-tabpane" data-fincontent="values"><div class="mv-form"><div class="mv-field" style="grid-column:span 4"><label>Valor Original:</label><input id="finOriginal" inputmode="decimal"></div><div class="mv-field" style="grid-column:span 4"><label>Valor Baixado:</label><input id="finPaid" inputmode="decimal"></div><div class="mv-field" style="grid-column:span 4"><label>Moeda:</label><input value="R$ - Real" readonly></div><div class="mv-field" style="grid-column:span 6"><label>Natureza:</label><input id="finNature"></div><div class="mv-field" style="grid-column:span 6"><label>Meio de Pagamento:</label><input id="finPayment"></div></div></div><div class="mv-tabpane" data-fincontent="bank"><div class="mv-note">Integração bancária preparada para boleto, PIX, conta/caixa e baixas.</div></div><div class="mv-tabpane" data-fincontent="fiscal"><div class="mv-note">Integração fiscal preparada para os dados do lançamento.</div></div><div class="mv-tabpane" data-fincontent="additional"><div class="mv-form"><div class="mv-field" style="grid-column:1/-1"><label>Origem:</label><input id="finOrigin" readonly></div><div class="mv-field" style="grid-column:1/-1"><label>ID do Movimento de Origem:</label><input id="finMovementId" readonly></div></div></div><div class="mv-footer"><button id="finOk">OK</button><button id="finCancel">Cancelar</button><button id="finSave">Salvar</button></div></div>`);
 
@@ -3908,12 +4344,273 @@ function mvUpdateHeader(){if(!mvDraft)return;const t=typeById($('mvType').value|
 function mvSyncDraft(){if(!mvDraft)return;Object.assign(mvDraft,{branch:$('mvBranch').value.trim(),branchName:$('mvBranchName').value.trim(),typeId:Number($('mvType').value)||'',clientId:Number($('mvClient').value)||'',series:$('mvSeries').value.trim(),number:$('mvNumber').value.trim(),issue:$('mvIssue').value,exit:$('mvExit').value,cost:$('mvCost').value,nature:$('mvNature').value.trim(),paymentMethodId:$('mvPaymentMethodId')?.value||'',paymentConditionId:$('mvPaymentConditionId')?.value||'',finHistory:$('mvFinHistory').value.trim(),obs:$('mvObs').value});mvUpdateHeader()}
 function mvSave(close=false){mvSyncDraft();if(!mvDraft.typeId)return alert('Selecione o Tipo de Movimento.');if(!mvDraft.clientId)return alert('Selecione o Cliente / Fornecedor.');if(!(mvDraft.items||[]).length)return alert('Inclua ao menos um item no movimento.');for(const item of mvDraft.items){const p=movementItemProduct(item);if(!p)return alert(`O item ${item.product||''} não existe mais no cadastro de Produto/Serviço. Substitua-o antes de salvar.`);item.productId=p.id;item.product=p.code;item.description=p.description||p.name||item.description||'';}if(mvDraft.paymentConditionId&&!(mvDraft.installments||[]).length)return alert('A condição de pagamento foi selecionada. Clique em Gerar para montar as parcelas antes de salvar.');let x=mvItems.find(a=>a.id===mvDraft.id);if(x)Object.assign(x,JSON.parse(JSON.stringify(mvDraft)));else mvItems.push(JSON.parse(JSON.stringify(mvDraft)));mvSel=mvDraft.id;mvEdit=mvDraft.id;saveMov();syncGeneratedFinancial(mvDraft);const acc=syncGeneratedAccounting(mvDraft);mvRender();finRender();mvRenderLinkedFin();mvRenderAccounting();showToast(acc?'Movimento salvo, financeiro e contabilização atualizados':'Movimento salvo. Nenhuma partida contábil configurada.');if(close)$('mvModal').classList.remove('show')}
 function mvDelete(){const x=mvItems.find(a=>a.id===mvSel);if(!x)return alert('Selecione um movimento.');if(confirm(`Excluir o movimento ${x.identifier}? Os lançamentos financeiro e contábil gerados também serão removidos.`)){mvItems=mvItems.filter(a=>a.id!==x.id);removeGeneratedFinancial(x.id);removeGeneratedAccounting(x.id);mvSel=null;saveMov();mvRender();finRender()}}
+
 function movementItemProduct(i){return (i?.productId?prodById(i.productId):null)||prodByCode(i?.product||'')}
-function mvRenderItems(){if(!mvDraft)return;const b=$('mvItemBody');b.innerHTML=(mvDraft.items||[]).length?mvDraft.items.map((i,n)=>{const p=movementItemProduct(i),code=p?.code||i.product||'',desc=p?(p.description||p.name||''):(i.description||'');return `<tr data-i="${n}" class="${n===mvItemEdit?'selected':''}"><td>${n+1}</td><td>${esc(code)}</td><td>${esc(desc)}</td><td>${esc(i.unit||p?.unitSell||p?.unitControl||'UN')}</td><td>${i.qty}</td><td class="num">${money(i.price)}</td><td class="num">${money((Number(i.qty)||0)*(Number(i.price)||0))}</td></tr>`}).join(''):`<tr><td colspan="7" class="mv-empty">Nenhum item incluído.</td></tr>`;b.querySelectorAll('tr[data-i]').forEach(tr=>{tr.onclick=()=>{mvItemEdit=Number(tr.dataset.i);mvRenderItems()};tr.ondblclick=()=>mvItemOpen(Number(tr.dataset.i))});mvUpdateHeader()}
-function mvSelectableProducts(){const list=products();return list.filter(p=>{if(p.kind==='Serviço')return true;if(p.last===true)return true;const code=String(p.code||'').trim();if(!code)return false;return !list.some(c=>c.id!==p.id&&String(c.code||'').trim().startsWith(code+'.'))}).sort((a,b)=>String(a.code||'').localeCompare(String(b.code||''),'pt-BR',{numeric:true}))}
-function mvItemOpen(i=null){mvItemEdit=i;const x=i===null?{productId:'',product:'',description:'',unit:'UN',qty:1,price:0}:mvDraft.items[i],registered=mvSelectableProducts(),current=movementItemProduct(x);$('mvItemTitle').textContent=`Item de Movimento: ${i===null?'<novo>':i+1}`;$('mviIdentifier').value=mvDraft.identifier;$('mviSeq').value=i===null?mvDraft.items.length+1:i+1;$('mviProduct').innerHTML='<option value="">Selecione um Produto/Serviço cadastrado...</option>'+registered.map(p=>`<option value="${esc(String(p.id))}">${esc(p.code)} - ${esc(p.name||p.description||'')}</option>`).join('');if(current&&!registered.some(p=>String(p.id)===String(current.id)))$('mviProduct').insertAdjacentHTML('beforeend',`<option value="${esc(String(current.id))}">${esc(current.code)} - ${esc(current.name||current.description||'')}</option>`);$('mviProduct').value=current?String(current.id):'';$('mviDescription').value=current?(current.description||current.name||''):(x.description||'');$('mviUnit').value=x.unit||current?.unitSell||current?.unitControl||'UN';$('mviQty').value=x.qty??1;$('mviPrice').value=x.price?money(x.price):(current?.price?money(parseMoney(current.price)):'');mvItemCalc();$('mvItemModal').classList.add('show')}
-function mvItemCalc(){const q=parseMoney($('mviQty').value),p=parseMoney($('mviPrice').value);$('mviTotal').value=money(q*p)}
-function mvItemSave(close=false){const productId=$('mviProduct').value;if(!productId)return alert('Selecione um Produto/Serviço já cadastrado.');const p=prodById(productId);if(!p)return alert('O Produto/Serviço selecionado não existe mais no cadastro.');const qty=parseMoney($('mviQty').value),price=parseMoney($('mviPrice').value);if(qty<=0)return alert('Informe a quantidade.');const row={productId:p.id,product:p.code,description:p.description||p.name||'',unit:$('mviUnit').value.trim()||p.unitSell||p.unitControl||'UN',qty,price};if(mvItemEdit===null)mvDraft.items.push(row);else mvDraft.items[mvItemEdit]=row;mvDraft.installments=[];mvRenderItems();mvRenderFinancialPane();if(close)$('mvItemModal').classList.remove('show')}
+
+function roundMoneyValue(v){return Math.round((Number(v)||0)*100)/100}
+function retentionValue(r){return roundMoneyValue((Number(r?.base)||0)*(Number(r?.rate)||0)/100)}
+function itemRetentionTotal(item){
+  if(!item?.hasRetention)return 0;
+  return roundMoneyValue((item.retentions||[]).reduce((s,r)=>s+retentionValue(r),0));
+}
+function movementRetentionTotal(m){
+  return roundMoneyValue((m?.items||[]).reduce((s,item)=>s+itemRetentionTotal(item),0));
+}
+function movementRetentionEntries(m){
+  const out=[];
+  for(const item of (m?.items||[])){
+    if(!item?.hasRetention)continue;
+    const product=movementItemProduct(item);
+    for(const r of (item.retentions||[])){
+      const value=retentionValue(r);
+      if(!r.creditAccount||value<=0)continue;
+      out.push({
+        ...r,
+        value,
+        item,
+        product
+      });
+    }
+  }
+  return out;
+}
+
+function mvRenderItems(){
+  if(!mvDraft)return;
+  const b=$('mvItemBody');
+  b.innerHTML=(mvDraft.items||[]).length
+    ?mvDraft.items.map((i,n)=>{
+      const p=movementItemProduct(i),
+            code=p?.code||i.product||'',
+            desc=p?(p.description||p.name||''):(i.description||''),
+            ret=itemRetentionTotal(i);
+      return `<tr data-i="${n}" class="${n===mvItemEdit?'selected':''}">
+        <td>${n+1}</td>
+        <td>${esc(code)}</td>
+        <td>${esc(desc)}</td>
+        <td>${esc(i.unit||p?.unitSell||p?.unitControl||'UN')}</td>
+        <td>${i.qty}</td>
+        <td class="num">${money(i.price)}</td>
+        <td class="num">${money((Number(i.qty)||0)*(Number(i.price)||0))}</td>
+        <td class="num">${i.hasRetention?money(ret):'—'}</td>
+      </tr>`;
+    }).join('')
+    :`<tr><td colspan="8" class="mv-empty">Nenhum item incluído.</td></tr>`;
+
+  b.querySelectorAll('tr[data-i]').forEach(tr=>{
+    tr.onclick=()=>{mvItemEdit=Number(tr.dataset.i);mvRenderItems()};
+    tr.ondblclick=()=>mvItemOpen(Number(tr.dataset.i));
+  });
+  mvUpdateHeader();
+}
+
+function mvSelectableProducts(){
+  const list=products();
+  return list.filter(p=>{
+    if(p.kind==='Serviço')return true;
+    if(p.last===true)return true;
+    const code=String(p.code||'').trim();
+    if(!code)return false;
+    return !list.some(c=>c.id!==p.id&&String(c.code||'').trim().startsWith(code+'.'));
+  }).sort((a,b)=>String(a.code||'').localeCompare(String(b.code||''),'pt-BR',{numeric:true}));
+}
+
+function mvItemSetTab(name){
+  document.querySelectorAll('[data-mvitab]').forEach(b=>b.classList.toggle('active',b.dataset.mvitab===name));
+  document.querySelectorAll('[data-mvipane]').forEach(p=>p.classList.toggle('active',p.dataset.mvipane===name));
+}
+
+function mvAccountingAccounts(){
+  let list=[];
+  try{
+    if(typeof pcAccounts!=='undefined')list=pcAccounts||[];
+  }catch(e){}
+  if(!list.length)list=rmLoad('rm_plano_contas_contabil_v3',[]);
+  return [...list].filter(a=>a&&a.code).sort((a,b)=>String(a.code).localeCompare(String(b.code),'pt-BR',{numeric:true}));
+}
+
+function mvRetentionAccountOptions(selected=''){
+  const accounts=mvAccountingAccounts();
+  return '<option value="">Selecione a conta contábil...</option>'+
+    accounts.map(a=>`<option value="${esc(String(a.code))}" ${String(a.code)===String(selected)?'selected':''}>${esc(a.code)} - ${esc(a.description||a.name||'')}</option>`).join('');
+}
+
+function mvRenderRetentionGrid(){
+  const body=$('mviRetBody');
+  if(!body)return;
+
+  const enabled=$('mviHasRetention')?.checked!==false;
+  body.innerHTML=mvItemRetentionDraft.length
+    ?mvItemRetentionDraft.map((r,i)=>{
+      const a=typeof pcByCode==='function'?pcByCode(r.creditAccount):null;
+      const val=retentionValue(r);
+      return `<tr data-ret="${i}" class="${i===mvItemRetentionSel?'selected':''}">
+        <td>${esc(r.name||'')}</td>
+        <td>${esc(r.creditAccount||'')}${r.creditAccount?' - ':''}${esc(a?.description||r.creditAccountDesc||'')}</td>
+        <td class="num">${money(r.base)}</td>
+        <td class="num">${Number(r.rate||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4})}%</td>
+        <td class="num">${money(val)}</td>
+      </tr>`;
+    }).join('')
+    :`<tr><td colspan="5" class="mv-empty">${enabled?'Nenhuma retenção cadastrada para este item.':'Marque "Este item sofre retenção" para utilizar retenções.'}</td></tr>`;
+
+  body.querySelectorAll('tr[data-ret]').forEach(tr=>{
+    tr.onclick=()=>{mvItemRetentionSel=Number(tr.dataset.ret);mvRenderRetentionGrid()};
+    tr.ondblclick=()=>mvRetentionOpen(Number(tr.dataset.ret));
+  });
+
+  const total=$('mviHasRetention')?.checked
+    ?mvItemRetentionDraft.reduce((s,r)=>s+retentionValue(r),0)
+    :0;
+  $('mviRetTotal').textContent=money(total);
+
+  ['mviRetNew','mviRetEdit','mviRetDelete'].forEach(id=>{
+    const el=$(id);if(el)el.disabled=!$('mviHasRetention')?.checked;
+  });
+}
+
+function mvItemOpen(i=null){
+  mvItemEdit=i;
+  const x=i===null
+    ?{productId:'',product:'',description:'',unit:'UN',qty:1,price:0,hasRetention:false,retentions:[]}
+    :mvDraft.items[i];
+
+  const registered=mvSelectableProducts(),current=movementItemProduct(x);
+  $('mvItemTitle').textContent=`Item de Movimento: ${i===null?'<novo>':i+1}`;
+  $('mviIdentifier').value=mvDraft.identifier;
+  $('mviSeq').value=i===null?mvDraft.items.length+1:i+1;
+  $('mviProduct').innerHTML='<option value="">Selecione um Produto/Serviço cadastrado...</option>'+
+    registered.map(p=>`<option value="${esc(String(p.id))}">${esc(p.code)} - ${esc(p.name||p.description||'')}</option>`).join('');
+  if(current&&!registered.some(p=>String(p.id)===String(current.id))){
+    $('mviProduct').insertAdjacentHTML('beforeend',`<option value="${esc(String(current.id))}">${esc(current.code)} - ${esc(current.name||current.description||'')}</option>`);
+  }
+  $('mviProduct').value=current?String(current.id):'';
+  $('mviDescription').value=current?(current.description||current.name||''):(x.description||'');
+  $('mviUnit').value=x.unit||current?.unitSell||current?.unitControl||'UN';
+  $('mviQty').value=x.qty??1;
+  $('mviPrice').value=x.price?money(x.price):(current?.price?money(parseMoney(current.price)):'');
+  $('mviHasRetention').checked=!!x.hasRetention;
+
+  mvItemRetentionDraft=JSON.parse(JSON.stringify(x.retentions||[]));
+  mvItemRetentionSel=null;
+  mvItemRetentionEdit=null;
+
+  mvItemCalc();
+  mvRenderRetentionGrid();
+  mvItemSetTab('item');
+  $('mvItemModal').classList.add('show');
+}
+
+function mvItemCalc(){
+  const q=parseMoney($('mviQty').value),p=parseMoney($('mviPrice').value);
+  $('mviTotal').value=money(q*p);
+}
+
+function mvRetentionCalc(){
+  const base=parseMoney($('mviRetBase')?.value||'');
+  const rate=parseMoney($('mviRetRate')?.value||'');
+  if($('mviRetValue'))$('mviRetValue').value=money(base*rate/100);
+}
+
+function mvRetentionOpen(i=null){
+  if(!$('mviHasRetention').checked)return alert('Marque que o item sofre retenção.');
+  mvItemRetentionEdit=i;
+  const r=i===null?null:mvItemRetentionDraft[i];
+  const itemBase=parseMoney($('mviTotal').value);
+
+  $('mviRetentionTitle').textContent=`Retenção: ${r?.name||'<nova>'}`;
+  $('mviRetName').value=r?.name||'';
+  $('mviRetCreditAccount').innerHTML=mvRetentionAccountOptions(r?.creditAccount||'');
+  $('mviRetBase').value=money(r?.base??itemBase);
+  $('mviRetRate').value=r?.rate??'';
+  mvRetentionCalc();
+
+  const modal=$('mviRetentionModal');
+  modal.classList.add('show');
+  modal.style.setProperty('display','flex','important');
+  modal.style.setProperty('z-index','22000','important');
+  setTimeout(()=>$('mviRetName')?.focus(),30);
+}
+
+function mvRetentionClose(){
+  const modal=$('mviRetentionModal');
+  modal.classList.remove('show');
+  modal.style.removeProperty('display');
+  modal.style.removeProperty('z-index');
+}
+
+function mvRetentionSave(){
+  const name=$('mviRetName').value.trim();
+  const creditAccount=$('mviRetCreditAccount').value;
+  const base=parseMoney($('mviRetBase').value);
+  const rate=parseMoney($('mviRetRate').value);
+
+  if(!name)return alert('Informe o nome da retenção.');
+  if(!creditAccount)return alert('Selecione a Conta Contábil do Crédito.');
+  if(base<=0)return alert('Informe uma Base de Cálculo maior que zero.');
+  if(rate<=0)return alert('Informe uma Alíquota maior que zero.');
+
+  const account=typeof pcByCode==='function'?pcByCode(creditAccount):null;
+  const row={
+    id:mvItemRetentionEdit===null?rmUid():(mvItemRetentionDraft[mvItemRetentionEdit]?.id||rmUid()),
+    name,
+    creditAccount,
+    creditAccountDesc:account?.description||'',
+    base:roundMoneyValue(base),
+    rate:Number(rate),
+    value:roundMoneyValue(base*rate/100)
+  };
+
+  if(mvItemRetentionEdit===null)mvItemRetentionDraft.push(row);
+  else mvItemRetentionDraft[mvItemRetentionEdit]=row;
+
+  mvItemRetentionSel=mvItemRetentionEdit===null?mvItemRetentionDraft.length-1:mvItemRetentionEdit;
+  mvRenderRetentionGrid();
+  mvRetentionClose();
+}
+
+function mvItemSave(close=false){
+  const productId=$('mviProduct').value;
+  if(!productId)return alert('Selecione um Produto/Serviço já cadastrado.');
+  const p=prodById(productId);
+  if(!p)return alert('O Produto/Serviço selecionado não existe mais no cadastro.');
+
+  const qty=parseMoney($('mviQty').value),price=parseMoney($('mviPrice').value);
+  if(qty<=0)return alert('Informe a quantidade.');
+
+  const hasRetention=$('mviHasRetention').checked;
+  const gross=roundMoneyValue(qty*price);
+  const retentionTotal=hasRetention
+    ?roundMoneyValue(mvItemRetentionDraft.reduce((s,r)=>s+retentionValue(r),0))
+    :0;
+
+  if(hasRetention&&retentionTotal>gross+.005){
+    return alert(`O total das retenções (${money(retentionTotal)}) não pode ser maior que o valor do item (${money(gross)}).`);
+  }
+
+  const previous=mvItemEdit===null?{}:(mvDraft.items[mvItemEdit]||{});
+  const row={
+    ...previous,
+    productId:p.id,
+    product:p.code,
+    description:p.description||p.name||'',
+    unit:$('mviUnit').value.trim()||p.unitSell||p.unitControl||'UN',
+    qty,
+    price,
+    hasRetention,
+    retentions:JSON.parse(JSON.stringify(mvItemRetentionDraft))
+  };
+
+  if(mvItemEdit===null)mvDraft.items.push(row);
+  else mvDraft.items[mvItemEdit]=row;
+
+  mvDraft.installments=[];
+  mvRenderItems();
+  mvRenderFinancialPane();
+  mvRenderAccounting();
+  if(close)$('mvItemModal').classList.remove('show');
+}
+
 function mvRenderLinkedFin(){if(!mvDraft)return;const a=movementFinancials(mvDraft);$('mvFinBody').innerHTML=a.length?a.map(f=>`<tr data-id="${f.id}"><td>${esc(f.costDesc||'')}</td><td>${fmtDate(f.issue)}</td><td>${esc(f.document||'')}</td><td>${esc(f.history||'')}</td><td class="num">${money(f.original)}</td><td class="num">${money(f.paid)}</td><td>${fmtDate(f.due)}</td></tr>`).join(''):`<tr><td colspan="7" class="mv-empty">Os lançamentos financeiros serão criados quando o movimento for salvo.</td></tr>`;$('mvFinBody').querySelectorAll('tr[data-id]').forEach(tr=>tr.ondblclick=()=>finOpen(Number(tr.dataset.id)))}
 function payCondById(id){return payCondItems.find(x=>String(x.id)===String(id))}
 function payById(id){return paymentMethods().find(x=>String(x.id)===String(id))}
@@ -4054,7 +4751,122 @@ function movementAccountingComplement(m){const doc=String(m?.number||m?.identifi
 function accountingPartFromDefault(row,side,base,m,source,item=null,natureCode=''){const value=Math.round((Number(base)||0)*(Number(row.percent??100)||0))/100*100/100;if(value<=0||!row.account)return null;const a=typeof pcByCode==='function'?pcByCode(row.account):null,cost=row.cost||m.cost||'',cc=typeof ccByCode==='function'?ccByCode(cost):null,h=typeof hpByCode==='function'?hpByCode(row.history||''):null;return{idPart:0,reference:0,document:m.number||String(m.identifier||''),branch:row.branch||m.branch||'',branchDesc:'',dept:row.dept||'',deptDesc:'',cost,costDesc:cc?.name||'',participant:'',participantDesc:'',debit:side==='debit'?row.account:'',debitDesc:side==='debit'?(a?.description||row.accountDesc||''):'',debitReduced:side==='debit'?(a?.reduced||''):'',credit:side==='credit'?row.account:'',creditDesc:side==='credit'?(a?.description||row.accountDesc||''):'',creditReduced:side==='credit'?(a?.reduced||''):'',counter:'',counterDesc:'',value,history:row.history||'',historyDesc:h?.description||'',complement:movementAccountingComplement(m),system:true,generation:'Movimento',grouped:false,conciliation:false,conciliation2:false,movementId:m.id,accountingSource:source,itemProductId:item?.productId||'',natureCode};}
 function movementNatureCandidates(prod){const codes=[prod?.natureRevenue,prod?.natureExpense,prod?.natureStock].filter(Boolean),seen=new Set(),out=[];for(const code of codes){const key=String(code);if(seen.has(key))continue;seen.add(key);const nat=movementNatureByCode(code);if(nat)out.push(nat)}return out}
 function movementNatureForSide(prod,side){const candidates=movementNatureCandidates(prod);return candidates.find(n=>(n.defaults?.[side]||[]).some(r=>r.account&&Number(r.percent??100)!==0))||candidates[0]||null}
-function buildMovementAccountingParts(m){const t=typeById(m?.typeId),defs=t?.defaults||{debit:[],credit:[]},parts=[],total=movementTotal(m||{});for(const side of ['debit','credit']){const typeRows=(defs[side]||[]).filter(r=>r.account&&Number(r.percent??100)!==0);if(typeRows.length){typeRows.forEach(r=>{const p=accountingPartFromDefault(r,side,total,m,`Tipo Movimento ${t?.number||''}`);if(p)parts.push(p)});continue}for(const item of (m?.items||[])){const prod=movementItemProduct(item);if(!prod)continue;const nat=movementNatureForSide(prod,side);if(!nat)continue;const base=(Number(item.qty)||0)*(Number(item.price)||0);const rows=(nat.defaults?.[side]||[]).filter(r=>r.account&&Number(r.percent??100)!==0);for(const r of rows){const p=accountingPartFromDefault(r,side,base,m,`Natureza ${nat.code}`,item,nat.code);if(p)parts.push(p)}}}return parts}
+
+function accountingRetentionPart(ret,m){
+  const account=ret.creditAccount;
+  const a=typeof pcByCode==='function'?pcByCode(account):null;
+  const cost=m.cost||'';
+  const cc=typeof ccByCode==='function'?ccByCode(cost):null;
+  const item=ret.item;
+  const product=ret.product||movementItemProduct(item);
+
+  return{
+    idPart:0,
+    reference:0,
+    document:m.number||String(m.identifier||''),
+    branch:m.branch||'',
+    branchDesc:'',
+    dept:'',
+    deptDesc:'',
+    cost,
+    costDesc:cc?.name||'',
+    participant:'',
+    participantDesc:'',
+    debit:'',
+    debitDesc:'',
+    debitReduced:'',
+    credit:account,
+    creditDesc:a?.description||ret.creditAccountDesc||'',
+    creditReduced:a?.reduced||'',
+    counter:'',
+    counterDesc:'',
+    value:roundMoneyValue(ret.value),
+    history:'',
+    historyDesc:'',
+    complement:movementAccountingComplement(m),
+    system:true,
+    generation:'Movimento',
+    grouped:false,
+    conciliation:false,
+    conciliation2:false,
+    movementId:m.id,
+    accountingSource:`Retenção - ${ret.name}`,
+    itemProductId:item?.productId||'',
+    natureCode:'',
+    retentionName:ret.name||'',
+    retentionId:ret.id||''
+  };
+}
+
+function buildMovementAccountingParts(m){
+  const t=typeById(m?.typeId),
+        defs=t?.defaults||{debit:[],credit:[]},
+        parts=[],
+        total=movementTotal(m||{}),
+        retentionEntries=movementRetentionEntries(m),
+        totalRetentions=roundMoneyValue(retentionEntries.reduce((s,r)=>s+Number(r.value||0),0));
+
+  // DÉBITO: regra normal já existente.
+  const debitTypeRows=(defs.debit||[]).filter(r=>r.account&&Number(r.percent??100)!==0);
+  if(debitTypeRows.length){
+    debitTypeRows.forEach(r=>{
+      const p=accountingPartFromDefault(r,'debit',total,m,`Tipo Movimento ${t?.number||''}`);
+      if(p)parts.push(p);
+    });
+  }else{
+    for(const item of (m?.items||[])){
+      const prod=movementItemProduct(item);
+      if(!prod)continue;
+      const nat=movementNatureForSide(prod,'debit');
+      if(!nat)continue;
+      const base=(Number(item.qty)||0)*(Number(item.price)||0);
+      const rows=(nat.defaults?.debit||[]).filter(r=>r.account&&Number(r.percent??100)!==0);
+      for(const r of rows){
+        const p=accountingPartFromDefault(r,'debit',base,m,`Natureza ${nat.code}`,item,nat.code);
+        if(p)parts.push(p);
+      }
+    }
+  }
+
+  // CRÉDITO PRINCIPAL:
+  // se o Tipo de Movimento possui Default de Crédito, o total das retenções
+  // é abatido desse crédito principal.
+  const creditTypeRows=(defs.credit||[]).filter(r=>r.account&&Number(r.percent??100)!==0);
+  if(creditTypeRows.length){
+    const netCreditBase=Math.max(0,roundMoneyValue(total-totalRetentions));
+    creditTypeRows.forEach(r=>{
+      const p=accountingPartFromDefault(r,'credit',netCreditBase,m,`Tipo Movimento ${t?.number||''}`);
+      if(p)parts.push(p);
+    });
+  }else{
+    // Fallback pela Natureza: também preserva o balanceamento, abatendo
+    // as retenções pertencentes a cada item.
+    for(const item of (m?.items||[])){
+      const prod=movementItemProduct(item);
+      if(!prod)continue;
+      const nat=movementNatureForSide(prod,'credit');
+      if(!nat)continue;
+
+      const gross=(Number(item.qty)||0)*(Number(item.price)||0);
+      const net=Math.max(0,roundMoneyValue(gross-itemRetentionTotal(item)));
+      const rows=(nat.defaults?.credit||[]).filter(r=>r.account&&Number(r.percent??100)!==0);
+
+      for(const r of rows){
+        const p=accountingPartFromDefault(r,'credit',net,m,`Natureza ${nat.code}`,item,nat.code);
+        if(p)parts.push(p);
+      }
+    }
+  }
+
+  // CRÉDITOS DAS RETENÇÕES
+  retentionEntries.forEach(r=>{
+    const p=accountingRetentionPart(r,m);
+    if(p&&p.value>0)parts.push(p);
+  });
+
+  return parts;
+}
+
 function assignMovementAccountingPartIds(parts){let max=0;try{max=Math.max(0,...entryItems.flatMap(e=>(e.parts||[]).map(p=>Number(p.idPart)||0)))}catch(e){}parts.forEach((p,i)=>p.idPart=max+i+1);return parts}
 function removeGeneratedAccounting(movementId){try{entryItems=entryItems.filter(e=>String(e.movementId)!==String(movementId));rmSave(ENTRY_KEY,entryItems);if(typeof lotRender==='function')lotRender()}catch(e){console.error(e)}}
 function syncGeneratedAccounting(m){
@@ -4066,7 +4878,43 @@ function syncGeneratedAccounting(m){
   const entry={id:existing?.id||rmUid(),idNumber:existing?.idNumber||nextEntryId(),lotId:Number(t.lotId),description:`MOVIMENTO ${t.number||''} - ${m.number||m.identifier||''}`.trim(),date:m.issue||today(),parts,attachments:existing?.attachments||[],movementId:m.id,movementIdentifier:m.identifier,generation:'Movimento'};
   entryItems=entryItems.filter(e=>String(e.movementId)!==String(m.id));entryItems.push(entry);rmSave(ENTRY_KEY,entryItems);if(typeof lotRender==='function')lotRender();return entry
 }
-function mvRenderAccounting(){if(!mvDraft||!$('mvAccountingLot'))return;const t=typeById($('mvType').value||mvDraft.typeId),lots=typeof lotItems!=='undefined'?lotItems:load('rm_lotes_v1'),lot=lots.find(l=>String(l.id)===String(t?.lotId));$('mvAccountingLot').value=lot?`${lot.code} - ${lot.description}`:'Nenhum lote configurado';const parts=buildMovementAccountingParts(mvDraft),body=$('mvAccountingBody');if(body)body.innerHTML=parts.length?parts.map(p=>{const prod=p.itemProductId?prodById(p.itemProductId):null;const itemNat=p.natureCode?`${prod?.code||''} / ${p.natureCode}`:'Movimento';return `<tr><td><span class="mv-account-source">${esc(p.accountingSource||'')}</span></td><td>${esc(itemNat)}</td><td>${esc(p.debit?`${p.debit} - ${p.debitDesc||''}`:'')}</td><td>${esc(p.credit?`${p.credit} - ${p.creditDesc||''}`:'')}</td><td>${esc(p.cost?`${p.cost} - ${p.costDesc||''}`:'')}</td><td>${esc(p.history?`${p.history} - ${p.historyDesc||''}`:'')}</td><td class="num">${money(p.value)}</td></tr>`}).join(''):`<tr><td colspan="7" class="mv-empty">Nenhuma partida contábil foi encontrada. Cadastre os Defaults Contábeis no Tipo de Movimento e/ou na Natureza de Receita dos itens.</td></tr>`;const d=parts.filter(p=>p.debit).reduce((a,p)=>a+Number(p.value||0),0),c=parts.filter(p=>p.credit).reduce((a,p)=>a+Number(p.value||0),0),diff=d-c;if($('mvAccountingDebit'))$('mvAccountingDebit').textContent=money(d);if($('mvAccountingCredit'))$('mvAccountingCredit').textContent=money(c);if($('mvAccountingDiff')){$('mvAccountingDiff').textContent=money(diff);$('mvAccountingDiff').className=Math.abs(diff)<.005?'ok':'bad'}}
+function mvRenderAccounting(){
+  if(!mvDraft||!$('mvAccountingLot'))return;
+  const t=typeById($('mvType').value||mvDraft.typeId),
+        lots=typeof lotItems!=='undefined'?lotItems:load('rm_lotes_v1'),
+        lot=lots.find(l=>String(l.id)===String(t?.lotId));
+
+  $('mvAccountingLot').value=lot?`${lot.code} - ${lot.description}`:'Nenhum lote configurado';
+
+  const parts=buildMovementAccountingParts(mvDraft),body=$('mvAccountingBody');
+  if(body)body.innerHTML=parts.length?parts.map(p=>{
+    const prod=p.itemProductId?prodById(p.itemProductId):null;
+    const itemNat=p.retentionName
+      ?`${prod?.code||''} / ${p.retentionName}`
+      :(p.natureCode?`${prod?.code||''} / ${p.natureCode}`:'Movimento');
+
+    return `<tr>
+      <td><span class="mv-account-source">${esc(p.accountingSource||'')}</span></td>
+      <td>${esc(itemNat)}</td>
+      <td>${esc(p.debit?`${p.debit} - ${p.debitDesc||''}`:'')}</td>
+      <td>${esc(p.credit?`${p.credit} - ${p.creditDesc||''}`:'')}</td>
+      <td>${esc(p.cost?`${p.cost} - ${p.costDesc||''}`:'')}</td>
+      <td>${esc(p.history?`${p.history} - ${p.historyDesc||''}`:'')}</td>
+      <td class="num">${money(p.value)}</td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="7" class="mv-empty">Nenhuma partida contábil foi encontrada. Cadastre os Defaults Contábeis no Tipo de Movimento e/ou na Natureza dos itens.</td></tr>`;
+
+  const d=parts.filter(p=>p.debit).reduce((a,p)=>a+Number(p.value||0),0),
+        c=parts.filter(p=>p.credit).reduce((a,p)=>a+Number(p.value||0),0),
+        diff=d-c;
+
+  if($('mvAccountingDebit'))$('mvAccountingDebit').textContent=money(d);
+  if($('mvAccountingCredit'))$('mvAccountingCredit').textContent=money(c);
+  if($('mvAccountingDiff')){
+    $('mvAccountingDiff').textContent=money(diff);
+    $('mvAccountingDiff').className=Math.abs(diff)<.005?'ok':'bad';
+  }
+}
 function finOpen(id=null){finEdit=id;let x=id?finItems.find(a=>a.id===id):null;if(!x)x={id:rmUid(),numberId:nextFinId(),movementId:null,origin:'Manual',issue:today(),due:today(),document:'',party:'',cost:'',costDesc:'',history:'',competency:today().slice(0,7),original:0,paid:0,nature:'',payment:''};$('finTitle').textContent=`Lançamento: ${x.numberId||'<novo>'}`;$('finSourceBox').innerHTML=x.movementId?`<span class="mv-source">Gerado pelo Movimento</span> Este lançamento está vinculado ao movimento <b>${x.movementId}</b>. Alterações principais devem ser feitas no movimento de origem.`:'Lançamento financeiro manual.';$('finIssue').value=x.issue||today();$('finDocument').value=x.document||'';$('finDue').value=x.due||today();$('finParty').value=x.party||'';$('finCost').value=x.costDesc||x.cost||'';$('finHistory').value=x.history||'';$('finOriginal').value=x.original?money(x.original):'';$('finPaid').value=x.paid?money(x.paid):'0,00';$('finNature').value=x.nature||'';$('finPayment').value=x.payment||'';$('finOrigin').value=x.origin||'';$('finMovementId').value=x.movementId||'';document.querySelectorAll('[data-fintab]').forEach((b,i)=>b.classList.toggle('active',i===0));document.querySelectorAll('[data-fincontent]').forEach((p,i)=>p.classList.toggle('active',i===0));$('finModal').classList.add('show')}
 function finSave(close=false){let x=finEdit?finItems.find(a=>a.id===finEdit):null;if(x?.movementId)return alert('Este lançamento foi gerado por um movimento. Altere os dados no movimento de origem.');if(!x){x={id:rmUid(),numberId:nextFinId(),movementId:null,origin:'Manual'};finItems.push(x)}Object.assign(x,{issue:$('finIssue').value,document:$('finDocument').value.trim(),due:$('finDue').value,party:$('finParty').value.trim(),costDesc:$('finCost').value.trim(),history:$('finHistory').value.trim(),competency:($('finIssue').value||'').slice(0,7),original:parseMoney($('finOriginal').value),paid:parseMoney($('finPaid').value),nature:$('finNature').value.trim(),payment:$('finPayment').value.trim()});finSel=x.id;finEdit=x.id;saveFin();finRender();showToast('Lançamento financeiro salvo');if(close)$('finModal').classList.remove('show')}
 function finDelete(){const x=finItems.find(a=>a.id===finSel);if(!x)return alert('Selecione um lançamento.');if(x.movementId)return alert('Este lançamento foi gerado por um movimento. Exclua ou altere o movimento de origem.');if(confirm('Excluir o lançamento financeiro selecionado?')){finItems=finItems.filter(a=>a.id!==x.id);finSel=null;saveFin();finRender()}}
@@ -4086,7 +4934,30 @@ document.querySelectorAll('[data-mvpane]').forEach(b=>b.onclick=()=>{mvSyncDraft
 // Mantém o rascunho do Cabeçalho sincronizado enquanto o usuário preenche.
 ['mvBranch','mvBranchName','mvSeries','mvNumber'].forEach(id=>$(id).addEventListener('input',()=>{if(mvDraft)mvSyncDraft()}));
 ['mvType','mvClient','mvIssue','mvExit','mvCost'].forEach(id=>$(id).onchange=()=>{mvSyncDraft();if(id==='mvClient')mvUpdateHeader()});
-$('mvItemNew').onclick=()=>mvItemOpen(null);$('mvItemEdit').onclick=()=>mvItemEdit===null?alert('Selecione um item.'):mvItemOpen(mvItemEdit);$('mvItemDelete').onclick=()=>{if(mvItemEdit===null)return;if(confirm('Excluir o item selecionado?')){mvDraft.items.splice(mvItemEdit,1);mvDraft.installments=[];mvItemEdit=null;mvRenderItems();mvRenderFinancialPane()}};$('mvItemClose').onclick=$('mvItemCancel').onclick=()=>$('mvItemModal').classList.remove('show');$('mvItemOk').onclick=()=>mvItemSave(true);$('mvItemSave').onclick=()=>mvItemSave(false);$('mviProduct').onchange=()=>{const p=prodById($('mviProduct').value);if(p){$('mviDescription').value=p.description||p.name||'';$('mviUnit').value=p.unitSell||p.unitControl||'UN';$('mviPrice').value=p.price?money(parseMoney(p.price)):''}else{$('mviDescription').value='';$('mviUnit').value='UN';$('mviPrice').value=''}mvItemCalc()};$('mviQty').oninput=$('mviPrice').oninput=mvItemCalc;$('mvOpenGeneratedFin').onclick=()=>{const f=movementFinancial(mvDraft);if(f)finOpen(f.id);else alert('Salve o movimento para gerar o lançamento financeiro.')};$('mvPaymentMethodId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentMethodId=$('mvPaymentMethodId').value;mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentConditionId=$('mvPaymentConditionId').value;const pc=payCondById(mvDraft.paymentConditionId);if(pc?.paymentMethodId){mvDraft.paymentMethodId=String(pc.paymentMethodId);$('mvPaymentMethodId').value=String(pc.paymentMethodId)}mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionNew').onclick=()=>payCondOpen();$('mvGenerateInstallments').onclick=mvGenerateInstallments;$('mvPaymentTotals').onclick=()=>alert(`Valor do Documento: ${money(movementTotal(mvDraft))}\nParcelas geradas: ${(mvDraft.installments||[]).length}\nTotal parcelado: ${money((mvDraft.installments||[]).reduce((s,x)=>s+Number(x.value||0),0))}`);$('mvPaymentLookup').onclick=()=>$('mvPaymentMethodId').focus();$('mvCashLookup').onclick=mvCashLookupOpen;document.querySelectorAll('[data-paycondtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-paycondtab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-paycondpane]').forEach(p=>p.classList.toggle('active',p.dataset.paycondpane===b.dataset.paycondtab))});$('payCondClose').onclick=$('payCondCancel').onclick=()=>$('payCondModal').classList.remove('show');$('payCondOk').onclick=()=>payCondSaveCondition(true);$('payCondSaveBtn').onclick=()=>payCondSaveCondition(false);
+document.querySelectorAll('[data-mvitab]').forEach(b=>b.onclick=()=>mvItemSetTab(b.dataset.mvitab));
+
+$('mviHasRetention').onchange=()=>{
+  mvRenderRetentionGrid();
+  mvRenderAccounting();
+};
+$('mviRetNew').onclick=()=>mvRetentionOpen(null);
+$('mviRetEdit').onclick=()=>mvItemRetentionSel===null?alert('Selecione uma retenção.'):mvRetentionOpen(mvItemRetentionSel);
+$('mviRetDelete').onclick=()=>{
+  if(mvItemRetentionSel===null)return alert('Selecione uma retenção.');
+  if(confirm('Excluir a retenção selecionada?')){
+    mvItemRetentionDraft.splice(mvItemRetentionSel,1);
+    mvItemRetentionSel=null;
+    mvRenderRetentionGrid();
+  }
+};
+$('mviRetentionClose').onclick=$('mviRetentionCancel').onclick=mvRetentionClose;
+$('mviRetentionOk').onclick=mvRetentionSave;
+$('mviRetBase').oninput=$('mviRetRate').oninput=mvRetentionCalc;
+
+$('mvItemNew').onclick=()=>mvItemOpen(null);$('mvItemEdit').onclick=()=>mvItemEdit===null?alert('Selecione um item.'):mvItemOpen(mvItemEdit);$('mvItemDelete').onclick=()=>{if(mvItemEdit===null)return;if(confirm('Excluir o item selecionado?')){mvDraft.items.splice(mvItemEdit,1);mvDraft.installments=[];mvItemEdit=null;mvRenderItems();mvRenderFinancialPane()}};$('mvItemClose').onclick=$('mvItemCancel').onclick=()=>$('mvItemModal').classList.remove('show');$('mvItemOk').onclick=()=>mvItemSave(true);$('mvItemSave').onclick=()=>mvItemSave(false);$('mviProduct').onchange=()=>{const p=prodById($('mviProduct').value);if(p){$('mviDescription').value=p.description||p.name||'';$('mviUnit').value=p.unitSell||p.unitControl||'UN';$('mviPrice').value=p.price?money(parseMoney(p.price)):''}else{$('mviDescription').value='';$('mviUnit').value='UN';$('mviPrice').value=''}mvItemCalc()};$('mviQty').oninput=$('mviPrice').oninput=()=>{
+  mvItemCalc();
+  mvRenderRetentionGrid();
+};$('mvOpenGeneratedFin').onclick=()=>{const f=movementFinancial(mvDraft);if(f)finOpen(f.id);else alert('Salve o movimento para gerar o lançamento financeiro.')};$('mvPaymentMethodId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentMethodId=$('mvPaymentMethodId').value;mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentConditionId=$('mvPaymentConditionId').value;const pc=payCondById(mvDraft.paymentConditionId);if(pc?.paymentMethodId){mvDraft.paymentMethodId=String(pc.paymentMethodId);$('mvPaymentMethodId').value=String(pc.paymentMethodId)}mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionNew').onclick=()=>payCondOpen();$('mvGenerateInstallments').onclick=mvGenerateInstallments;$('mvPaymentTotals').onclick=()=>alert(`Valor do Documento: ${money(movementTotal(mvDraft))}\nParcelas geradas: ${(mvDraft.installments||[]).length}\nTotal parcelado: ${money((mvDraft.installments||[]).reduce((s,x)=>s+Number(x.value||0),0))}`);$('mvPaymentLookup').onclick=()=>$('mvPaymentMethodId').focus();$('mvCashLookup').onclick=mvCashLookupOpen;document.querySelectorAll('[data-paycondtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-paycondtab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-paycondpane]').forEach(p=>p.classList.toggle('active',p.dataset.paycondpane===b.dataset.paycondtab))});$('payCondClose').onclick=$('payCondCancel').onclick=()=>$('payCondModal').classList.remove('show');$('payCondOk').onclick=()=>payCondSaveCondition(true);$('payCondSaveBtn').onclick=()=>payCondSaveCondition(false);
 // Eventos Financeiro
 $('finNew').onclick=()=>finOpen();$('finEdit').onclick=()=>finSel?finOpen(finSel):alert('Selecione um lançamento.');$('finDelete').onclick=finDelete;$('finRefresh').onclick=()=>{finItems=load(FIN_KEY);finRender()};$('finSearchBtn').onclick=()=>{$('finSearch').classList.toggle('show');if($('finSearch').classList.contains('show'))$('finSearch').focus();else{$('finSearch').value='';finRender()}};$('finSearch').oninput=finRender;[['finFirst','first'],['finPrev','prev'],['finNext','next'],['finLast','last']].forEach(([id,w])=>$(id).onclick=()=>{const arr=finRender();moveSelection(arr,finSel,x=>{finSel=x;finRender()},w)});document.querySelectorAll('[data-fintab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-fintab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-fincontent]').forEach(p=>p.classList.toggle('active',p.dataset.fincontent===b.dataset.fintab))});$('finClose').onclick=$('finCancel').onclick=()=>$('finModal').classList.remove('show');$('finOk').onclick=()=>finSave(true);$('finSave').onclick=()=>finSave(false);
 
