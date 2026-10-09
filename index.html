@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v46 - Lote de Baixa não reseta ao perder foco -->
+<!-- GESTAOERP MCloud v48 - Modal de Data da Baixa -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -2361,6 +2361,28 @@ window.MCLOUD_CONFIG = {
 #tmLowEditModal.show{
   display:flex !important;
   z-index:20100 !important;
+}
+</style>
+
+
+<style id="financial-settlement-modal-v48-css">
+#finSettleModal.fin-settle-modal{
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%) !important;
+  width:min(700px,calc(100vw - 50px)) !important;
+  height:min(560px,calc(100vh - 60px)) !important;
+  max-width:none !important;
+  max-height:none !important;
+}
+#finSettleModal.show{
+  display:flex !important;
+  z-index:21000 !important;
+}
+#finSettleDate{
+  border-color:#5aa3df;
 }
 </style>
 
@@ -4841,32 +4863,128 @@ function augmentTMGrid(){const body=q('tmBody');if(!body)return;const table=body
 
 /* ---------------- CONTA / CAIXA + NATUREZA ---------------- */
 function installCashNature(){const pane=document.querySelector('[data-cashpane="accounting"]');if(!pane||q('cashNatureCode'))return;const box=document.createElement('div');box.className='cash-nature-link';box.innerHTML='<div class="cash-field"><label>Natureza Orçamentária/Financeira da Conta/Caixa:</label><select id="cashNatureCode"><option value="">Selecione a natureza...</option></select></div><div style="margin-top:6px;font-size:10px;color:#637a8d">Na baixa financeira, o <b>Crédito</b> será obtido do Default de Crédito desta Natureza.</div>';pane.insertBefore(box,pane.firstChild);fillCashNature();
-  const modal=q('cashModal');if(modal)new MutationObserver(()=>{if(modal.classList.contains('show'))loadCashNature()}).observe(modal,{attributes:true,attributeFilter:['class']});
+  const modal=q('cashModal');
+  if(modal){
+    // Carrega a Natureza somente quando o cadastro passa de
+    // FECHADO -> ABERTO. Alterações de classe como erp-window-active
+    // não podem apagar a seleção feita pelo usuário.
+    const observer=new MutationObserver(records=>{
+      for(const rec of records){
+        const before=` ${rec.oldValue||''} `;
+        const wasOpen=before.includes(' show ');
+        const isOpen=modal.classList.contains('show');
+
+        if(!wasOpen && isOpen){
+          loadCashNature();
+        }
+      }
+    });
+
+    observer.observe(modal,{
+      attributes:true,
+      attributeFilter:['class'],
+      attributeOldValue:true
+    });
+  }
 }
 function fillCashNature(){const sel=q('cashNatureCode');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione a natureza...</option>'+nats40().filter(n=>n.type==='analytic'&&!n.inactive).map(n=>`<option value="${esc40(n.code)}">${esc40(n.code)} - ${esc40(n.description)}</option>`).join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}
 function cashCurrentRecord(){const code=q('cashCode')?.value.trim();return cash40().find(x=>String(x.code)===String(code))||null}
-function loadCashNature(){fillCashNature();q('cashNatureCode').value=cashCurrentRecord()?.natureCode||''}
+function loadCashNature(){
+  fillCashNature();
+  const sel=q('cashNatureCode');
+  if(!sel)return;
+  sel.value=cashCurrentRecord()?.natureCode||'';
+}
+
+// A Natureza faz parte do próprio formulário da Conta/Caixa.
+// Enquanto o cadastro está aberto, não recarregamos o valor do banco.
+function preserveCashNatureSelection(){
+  const sel=q('cashNatureCode');
+  if(!sel)return;
+  sel.dataset.pendingValue=sel.value||'';
+}
+
 function saveCashNature(){const code=q('cashCode')?.value.trim();if(!code)return;const arr=cash40(),r=arr.find(x=>String(x.code)===String(code));if(!r)return;r.natureCode=q('cashNatureCode')?.value||'';rmSave(CASH_KEY,arr)}
+
+document.addEventListener('change',e=>{
+  if(e.target?.id==='cashNatureCode'){
+    preserveCashNatureSelection();
+  }
+},true);
 
 /* ---------------- PROCESSOS > BAIXA ---------------- */
 let settleFinId=null;
 function installFinancialProcess(){const tb=q('finNew')?.closest('.mv-toolbar');if(!tb||q('finProcessesBtn'))return;tb.style.position='relative';const btn=[...tb.querySelectorAll('button')].find(b=>(b.textContent||'').includes('Processos'));if(!btn)return;btn.id='finProcessesBtn';const wrap=document.createElement('span');wrap.className='fin-process-wrap';btn.parentNode.insertBefore(wrap,btn);wrap.appendChild(btn);wrap.insertAdjacentHTML('beforeend',`<div class="fin-process-menu" id="finProcessMenu"><div class="fin-process-item">Cancelamento de Remessa</div><div class="fin-process-item">Borderô de Pagamentos <span>›</span></div><div class="fin-process-item">Boleto <span>›</span></div><div class="fin-process-item">Baixa <span>›</span><div class="fin-process-sub"><button id="finProcessSettle">Baixar Lançamento</button><button disabled>Baixar Créditos/Devoluções Vinculados</button><button disabled>Baixa Com Perda Financeira</button><button disabled>Importação de Baixa</button><button disabled>Contabilizar Lançamentos Baixados</button></div></div><div class="fin-process-sep"></div><div class="fin-process-item">Relatórios</div></div>`);btn.onclick=e=>{e.stopPropagation();q('finProcessMenu').classList.toggle('show')};q('finProcessSettle').onclick=e=>{e.stopPropagation();q('finProcessMenu').classList.remove('show');openSettlement()};document.addEventListener('click',e=>{if(!wrap.contains(e.target))q('finProcessMenu')?.classList.remove('show')});
 
   document.body.insertAdjacentHTML('beforeend',`<div class="mv-modal fin-settle-modal" id="finSettleModal"><div class="mv-title"><span>Baixa de Lançamento</span><button id="finSettleClose">×</button></div><div class="fin-settle-body"><div class="fin-settle-summary"><div>Lançamento<b id="finSettleLaunch">—</b></div><div>Documento<b id="finSettleDoc">—</b></div><div>Tipo de Movimento<b id="finSettleType">—</b></div><div>Lote de Baixa<b id="finSettleLot">—</b></div><div>Valor Original<b id="finSettleOriginal">0,00</b></div><div>Saldo em Aberto<b id="finSettleOpen">0,00</b></div></div><div class="fin-settle-grid"><div class="fin-settle-field" style="grid-column:span 7"><label>Conta/Caixa:</label><select id="finSettleCash"><option value="">Selecione...</option></select></div><div class="fin-settle-field" style="grid-column:span 5"><label>Data da Baixa:</label><input type="date" id="finSettleDate"></div><div class="fin-settle-field" style="grid-column:span 5"><label>Valor da Baixa:</label><input id="finSettleValue" inputmode="decimal"></div><div class="fin-settle-field" style="grid-column:span 7"><label>Natureza da Conta/Caixa:</label><input id="finSettleNature" readonly></div></div><div class="fin-settle-preview"><h4>Contabilização da Baixa</h4><table><thead><tr><th>Origem</th><th>Débito</th><th>Crédito</th><th>Percentual</th><th>Valor</th></tr></thead><tbody id="finSettlePreview"></tbody></table></div><div class="fin-settle-warning" id="finSettleWarning"></div></div><div class="mv-footer"><button id="finSettleOk">OK</button><button id="finSettleCancel">Cancelar</button><button id="finSettleSave">Baixar</button></div></div>`);
-  q('finSettleClose').onclick=q('finSettleCancel').onclick=()=>q('finSettleModal').classList.remove('show');q('finSettleCash').onchange=renderSettlementPreview;q('finSettleValue').oninput=renderSettlementPreview;q('finSettleSave').onclick=()=>executeSettlement(false);q('finSettleOk').onclick=()=>executeSettlement(true);
+  q('finSettleClose').onclick=q('finSettleCancel').onclick=()=>{
+  const m=q('finSettleModal');
+  m.classList.remove('show');
+  m.style.removeProperty('display');
+  m.style.removeProperty('z-index');
+};q('finSettleCash').onchange=renderSettlementPreview;q('finSettleValue').oninput=renderSettlementPreview;q('finSettleSave').onclick=()=>executeSettlement(false);q('finSettleOk').onclick=()=>executeSettlement(true);
 }
 function selectedFinancial(){const tr=q('finBody')?.querySelector('tr.selected[data-id]');if(!tr)return null;return fins40().find(f=>String(f.id)===String(tr.dataset.id))||null}
 function settlementType(fin){let typeId=fin?.movementTypeId; if(!typeId&&fin?.movementId){const m=movs40().find(x=>String(x.id)===String(fin.movementId));typeId=m?.typeId}return types40().find(t=>String(t.id)===String(typeId))||null}
 function settlementCashOptions(){const sel=q('finSettleCash');sel.innerHTML='<option value="">Selecione...</option>'+cash40().filter(c=>c.active!==false).map(c=>`<option value="${esc40(c.id)}">${esc40(c.code)} - ${esc40(c.description)}</option>`).join('')}
-function openSettlement(){const fin=selectedFinancial();if(!fin)return alert('Selecione um lançamento financeiro.');const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(open<=.005)return alert('Este lançamento já está totalmente baixado.');const t=settlementType(fin);if(!t)return alert('O lançamento selecionado não possui Tipo de Movimento de origem.');settleFinId=fin.id;settlementCashOptions();q('finSettleLaunch').textContent=fin.numberId||fin.id;q('finSettleDoc').textContent=fin.document||'';q('finSettleType').textContent=`${t.number||''} - ${t.name||''}`;const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));q('finSettleLot').textContent=lot?`${lot.code} - ${lot.description}`:'Não configurado';q('finSettleOriginal').textContent=money40(fin.original);q('finSettleOpen').textContent=money40(open);q('finSettleDate').value=today40();q('finSettleValue').value=money40(open);q('finSettleNature').value='';q('finSettleCash').value='';renderSettlementPreview();q('finSettleModal').classList.add('show')}
+function openSettlement(){
+  const fin=selectedFinancial();
+  if(!fin)return alert('Selecione um lançamento financeiro.');
+
+  const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));
+  if(open<=.005)return alert('Este lançamento já está totalmente baixado.');
+
+  const t=settlementType(fin);
+  if(!t)return alert('O lançamento selecionado não possui Tipo de Movimento de origem.');
+
+  settleFinId=fin.id;
+  settlementCashOptions();
+
+  q('finSettleLaunch').textContent=fin.numberId||fin.id;
+  q('finSettleDoc').textContent=fin.document||'';
+  q('finSettleType').textContent=`${t.number||''} - ${t.name||''}`;
+
+  const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));
+  q('finSettleLot').textContent=lot?`${lot.code} - ${lot.description}`:'Não configurado';
+  q('finSettleOriginal').textContent=money40(fin.original);
+  q('finSettleOpen').textContent=money40(open);
+
+  // A data deve ser informada pelo usuário.
+  q('finSettleDate').value='';
+  q('finSettleValue').value=money40(open);
+  q('finSettleNature').value='';
+  q('finSettleCash').value='';
+
+  renderSettlementPreview();
+
+  const modal=q('finSettleModal');
+  modal.classList.add('show');
+  modal.style.setProperty('display','flex','important');
+  modal.style.setProperty('z-index','21000','important');
+
+  setTimeout(()=>q('finSettleDate')?.focus(),40);
+}
 function settlementContext(){const fin=fins40().find(f=>String(f.id)===String(settleFinId));if(!fin)return{error:'Lançamento financeiro não encontrado.'};const t=settlementType(fin);if(!t)return{error:'Tipo de Movimento não encontrado.'};const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));if(!lot)return{error:'Cadastre o Lote de Baixa no Tipo de Movimento.'};const debits=(t.settlementDefaults?.debit||[]).filter(r=>r.account&&Number(r.percent??100)>0);
 if(!debits.length){
   return{error:`O Tipo de Movimento ${t.number||''} - ${t.name||''} não possui Default de Baixa salvo. Abra o Tipo de Movimento, cadastre o Débito no Default de Baixa e clique em Salvar.`};
-}const cash=cash40().find(c=>String(c.id)===String(q('finSettleCash')?.value));if(!cash)return{error:'Selecione a Conta/Caixa da baixa.'};if(!cash.natureCode)return{error:'Cadastre uma Natureza na Conta/Caixa selecionada.'};const nat=nats40().find(n=>String(n.code)===String(cash.natureCode));if(!nat)return{error:'A Natureza vinculada à Conta/Caixa não foi encontrada.'};const credits=(nat.defaults?.credit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!credits.length)return{error:`A Natureza ${nat.code} não possui Default de Crédito.`};const value=parseMoney40(q('finSettleValue')?.value);const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(value<=0)return{error:'Informe um valor de baixa maior que zero.'};if(value>open+.005)return{error:'O valor da baixa não pode ser maior que o saldo em aberto.'};const dp=debits.reduce((s,r)=>s+Number(r.percent??100),0),cp=credits.reduce((s,r)=>s+Number(r.percent??100),0);if(Math.abs(dp-100)>.0001)return{error:`O Default de Baixa deve totalizar 100%. Total atual: ${dp.toLocaleString('pt-BR')}%.`};if(Math.abs(cp-100)>.0001)return{error:`O Default de Crédito da Natureza da Conta/Caixa deve totalizar 100%. Total atual: ${cp.toLocaleString('pt-BR')}%.`};return{fin,t,lot,cash,nat,debits,credits,value,open,date:q('finSettleDate')?.value||today40()}}
+}const cash=cash40().find(c=>String(c.id)===String(q('finSettleCash')?.value));if(!cash)return{error:'Selecione a Conta/Caixa da baixa.'};if(!cash.natureCode)return{error:'Cadastre uma Natureza na Conta/Caixa selecionada.'};const nat=nats40().find(n=>String(n.code)===String(cash.natureCode));if(!nat)return{error:'A Natureza vinculada à Conta/Caixa não foi encontrada.'};const credits=(nat.defaults?.credit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!credits.length)return{error:`A Natureza ${nat.code} não possui Default de Crédito.`};const date=q('finSettleDate')?.value||'';
+if(!date)return{error:'Informe a Data da Baixa.'};
+
+const value=parseMoney40(q('finSettleValue')?.value);
+const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));
+if(value<=0)return{error:'Informe um valor de baixa maior que zero.'};
+if(value>open+.005)return{error:'O valor da baixa não pode ser maior que o saldo em aberto.'};
+const dp=debits.reduce((s,r)=>s+Number(r.percent??100),0),cp=credits.reduce((s,r)=>s+Number(r.percent??100),0);if(Math.abs(dp-100)>.0001)return{error:`O Default de Baixa deve totalizar 100%. Total atual: ${dp.toLocaleString('pt-BR')}%.`};if(Math.abs(cp-100)>.0001)return{error:`O Default de Crédito da Natureza da Conta/Caixa deve totalizar 100%. Total atual: ${cp.toLocaleString('pt-BR')}%.`};return{fin,t,lot,cash,nat,debits,credits,value,open,date}}
 function renderSettlementPreview(){const ctx=settlementContext(),body=q('finSettlePreview'),warn=q('finSettleWarning');if(!body)return;if(ctx.error){body.innerHTML='<tr><td colspan="5" style="padding:14px;color:#718497">Preencha os dados da baixa para visualizar a contabilização.</td></tr>';warn.textContent=ctx.error;warn.classList.add('show');const c=cash40().find(x=>String(x.id)===String(q('finSettleCash')?.value));q('finSettleNature').value=c?.natureCode||'';return}warn.classList.remove('show');q('finSettleNature').value=`${ctx.nat.code} - ${ctx.nat.description}`;const rows=[];ctx.debits.forEach(r=>rows.push(`<tr><td>Tipo Movimento - Default de Baixa</td><td>${esc40(r.account)} - ${esc40(r.accountDesc||'')}</td><td></td><td>${Number(r.percent??100).toLocaleString('pt-BR')}%</td><td class="num">${money40(ctx.value*Number(r.percent??100)/100)}</td></tr>`));ctx.credits.forEach(r=>rows.push(`<tr><td>Conta/Caixa / Natureza ${esc40(ctx.nat.code)}</td><td></td><td>${esc40(r.account)} - ${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR')}%</td><td class="num">${money40(ctx.value*Number(r.percent??100)/100)}</td></tr>`));body.innerHTML=rows.join('')}
 function nextPartBase(arr){return Math.max(0,...arr.flatMap(e=>(e.parts||[]).map(p=>Number(p.idPart)||0)))}
 function makeSettlementPart(row,side,ctx,idPart){const account=row.account,a=typeof pcByCode==='function'?pcByCode(account):null,cost=row.cost||ctx.fin.cost||'',cc=typeof ccByCode==='function'?ccByCode(cost):null,h=typeof hpByCode==='function'?hpByCode(row.history||''):null,val=Math.round(ctx.value*Number(row.percent??100))/100*100/100;return{idPart,reference:0,document:ctx.fin.document||'',branch:row.branch||'',branchDesc:'',dept:row.dept||'',deptDesc:'',cost,costDesc:cc?.name||ctx.fin.costDesc||'',participant:'',participantDesc:'',debit:side==='debit'?account:'',debitDesc:side==='debit'?(a?.description||row.accountDesc||''):'',debitReduced:side==='debit'?(a?.reduced||''):'',credit:side==='credit'?account:'',creditDesc:side==='credit'?(a?.description||row.accountDesc||''):'',creditReduced:side==='credit'?(a?.reduced||''):'',counter:'',counterDesc:'',value:val,history:row.history||'',historyDesc:h?.description||'',complement:[ctx.fin.document,ctx.fin.party].filter(Boolean).join(', '),system:true,generation:'Baixa Financeira',grouped:false,conciliation:false,conciliation2:false,financialId:ctx.fin.id,cashAccountId:ctx.cash.id,accountingSource:side==='debit'?'Tipo Movimento - Default de Baixa':`Conta/Caixa - Natureza ${ctx.nat.code}`}}
-function executeSettlement(closeAfter){const ctx=settlementContext();if(ctx.error){renderSettlementPreview();return alert(ctx.error)}const entries=entries40();let pId=nextPartBase(entries)+1;const parts=[];ctx.debits.forEach(r=>parts.push(makeSettlementPart(r,'debit',ctx,pId++)));ctx.credits.forEach(r=>parts.push(makeSettlementPart(r,'credit',ctx,pId++)));const debit=parts.filter(p=>p.debit).reduce((s,p)=>s+Number(p.value||0),0),credit=parts.filter(p=>p.credit).reduce((s,p)=>s+Number(p.value||0),0);if(Math.abs(debit-credit)>.005)return alert(`A contabilização da baixa não está balanceada.\nDébitos: ${money40(debit)}\nCréditos: ${money40(credit)}`);let idNumber;try{idNumber=typeof nextEntryId==='function'?nextEntryId():Math.max(0,...entries.map(e=>Number(e.idNumber)||0))+1}catch(e){return}const entry={id:rmUid(),idNumber,lotId:Number(ctx.lot.id),description:`BAIXA ${ctx.fin.document||ctx.fin.numberId||''} - ${ctx.fin.party||''}`.trim(),date:ctx.date,parts,attachments:[],financialId:ctx.fin.id,generation:'Baixa Financeira',cashAccountId:ctx.cash.id};entries.push(entry);rmSave(ENTRY_KEY,entries);const fins=fins40(),fin=fins.find(f=>String(f.id)===String(ctx.fin.id));fin.paid=Math.min(Number(fin.original||0),Number(fin.paid||0)+ctx.value);fin.settlements=fin.settlements||[];fin.settlements.push({id:rmUid(),date:ctx.date,value:ctx.value,cashAccountId:ctx.cash.id,cashCode:ctx.cash.code,natureCode:ctx.nat.code,typeId:ctx.t.id,lotId:ctx.lot.id,accountingEntryId:entry.id,accountingIdNumber:idNumber});rmSave(FIN_KEY,fins);try{if(typeof entryItems!=='undefined'){entryItems=rmLoad(ENTRY_KEY,[])}if(typeof lotRender==='function')lotRender()}catch(e){}q('finRefresh')?.click();showToast(`Baixa realizada e contabilizada no lote ${ctx.lot.code}`);if(closeAfter)q('finSettleModal').classList.remove('show');else{q('finSettleModal').classList.remove('show')}}
+function executeSettlement(closeAfter){const ctx=settlementContext();if(ctx.error){renderSettlementPreview();return alert(ctx.error)}const entries=entries40();let pId=nextPartBase(entries)+1;const parts=[];ctx.debits.forEach(r=>parts.push(makeSettlementPart(r,'debit',ctx,pId++)));ctx.credits.forEach(r=>parts.push(makeSettlementPart(r,'credit',ctx,pId++)));const debit=parts.filter(p=>p.debit).reduce((s,p)=>s+Number(p.value||0),0),credit=parts.filter(p=>p.credit).reduce((s,p)=>s+Number(p.value||0),0);if(Math.abs(debit-credit)>.005)return alert(`A contabilização da baixa não está balanceada.\nDébitos: ${money40(debit)}\nCréditos: ${money40(credit)}`);let idNumber;try{idNumber=typeof nextEntryId==='function'?nextEntryId():Math.max(0,...entries.map(e=>Number(e.idNumber)||0))+1}catch(e){return}const entry={id:rmUid(),idNumber,lotId:Number(ctx.lot.id),description:`BAIXA ${ctx.fin.document||ctx.fin.numberId||''} - ${ctx.fin.party||''}`.trim(),date:ctx.date,parts,attachments:[],financialId:ctx.fin.id,generation:'Baixa Financeira',cashAccountId:ctx.cash.id};entries.push(entry);rmSave(ENTRY_KEY,entries);const fins=fins40(),fin=fins.find(f=>String(f.id)===String(ctx.fin.id));fin.paid=Math.min(Number(fin.original||0),Number(fin.paid||0)+ctx.value);fin.settlements=fin.settlements||[];fin.settlements.push({id:rmUid(),date:ctx.date,value:ctx.value,cashAccountId:ctx.cash.id,cashCode:ctx.cash.code,natureCode:ctx.nat.code,typeId:ctx.t.id,lotId:ctx.lot.id,accountingEntryId:entry.id,accountingIdNumber:idNumber});rmSave(FIN_KEY,fins);try{if(typeof entryItems!=='undefined'){entryItems=rmLoad(ENTRY_KEY,[])}if(typeof lotRender==='function')lotRender()}catch(e){}q('finRefresh')?.click();showToast(`Baixa realizada e contabilizada no lote ${ctx.lot.code}`);{
+  const m=q('finSettleModal');
+  m.classList.remove('show');
+  m.style.removeProperty('display');
+  m.style.removeProperty('z-index');
+}
+}
 
 function boot40(){installTMUI();installCashNature();installFinancialProcess()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot40,{once:true});else boot40();
