@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v37 - tabs proporcionais + resize real + z-order de modais -->
+<!-- GESTAOERP MCloud v38 - resize inline !important definitivo -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -1813,6 +1813,31 @@ window.MCLOUD_CONFIG = {
   box-shadow:
     0 28px 72px rgba(10,45,78,.30),
     0 0 0 2px rgba(18,111,190,.18) !important;
+}
+</style>
+
+
+<style id="erp-window-inline-resize-v38">
+/* O tamanho real passa a ser controlado inline pelo JavaScript.
+   Estas regras evitam que estilos antigos re-centralizem a janela. */
+.erp-window-managed.erp-window-free{
+  right:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+  max-width:none !important;
+  max-height:none !important;
+}
+
+/* Cantinho visual discreto para indicar que pode redimensionar */
+.erp-window-managed:not(.erp-window-maximized) .erp-resize-handle[data-dir="se"]::after{
+  content:"";
+  position:absolute;
+  right:2px;
+  bottom:2px;
+  width:8px;
+  height:8px;
+  border-right:2px solid rgba(34,94,139,.40);
+  border-bottom:2px solid rgba(34,94,139,.40);
 }
 </style>
 
@@ -3756,7 +3781,7 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 
 
 
-<script id="erp-window-manager-v37">
+<script id="erp-window-manager-v38">
 (function(){
   'use strict';
 
@@ -3793,6 +3818,19 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
   }
 
   function rectToVars(win,rect){
+    // Usa estilos INLINE com !important para vencer regras específicas
+    // como #entryModal.entry-modal { width:... !important }.
+    win.style.setProperty('left',`${Math.round(rect.left)}px`,'important');
+    win.style.setProperty('top',`${Math.round(rect.top)}px`,'important');
+    win.style.setProperty('width',`${Math.round(rect.width)}px`,'important');
+    win.style.setProperty('height',`${Math.round(rect.height)}px`,'important');
+    win.style.setProperty('right','auto','important');
+    win.style.setProperty('bottom','auto','important');
+    win.style.setProperty('transform','none','important');
+    win.style.setProperty('max-width','none','important');
+    win.style.setProperty('max-height','none','important');
+
+    // Mantém as vars apenas por compatibilidade com o CSS existente.
     win.style.setProperty('--erp-win-left',`${Math.round(rect.left)}px`);
     win.style.setProperty('--erp-win-top',`${Math.round(rect.top)}px`);
     win.style.setProperty('--erp-win-w',`${Math.round(rect.width)}px`);
@@ -3844,14 +3882,46 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
   function maximize(win){
     if(win.classList.contains('erp-window-maximized')){
       win.classList.remove('erp-window-maximized');
-      win.classList.add('erp-window-free');
+
+      const saved = win._erpRestoreRect;
+      if(saved){
+        rectToVars(win,saved);
+      }else{
+        rectToVars(win,{
+          left:40,
+          top:40,
+          width:Math.min(900,window.innerWidth-80),
+          height:Math.min(650,window.innerHeight-80)
+        });
+      }
+
       const maxBtn=win.querySelector('.erp-win-max');
       if(maxBtn){maxBtn.textContent='□';maxBtn.title='Maximizar'}
       bringFront(win);
       return;
     }
-    ensureFree(win);
+
+    const r=win.getBoundingClientRect();
+    win._erpRestoreRect={
+      left:r.left,
+      top:r.top,
+      width:r.width,
+      height:r.height
+    };
+
     win.classList.add('erp-window-maximized');
+    win.classList.add('erp-window-free');
+
+    win.style.setProperty('left','6px','important');
+    win.style.setProperty('top','6px','important');
+    win.style.setProperty('width','calc(100vw - 12px)','important');
+    win.style.setProperty('height','calc(100dvh - 12px)','important');
+    win.style.setProperty('right','auto','important');
+    win.style.setProperty('bottom','auto','important');
+    win.style.setProperty('transform','none','important');
+    win.style.setProperty('max-width','none','important');
+    win.style.setProperty('max-height','none','important');
+
     const maxBtn=win.querySelector('.erp-win-max');
     if(maxBtn){maxBtn.textContent='❐';maxBtn.title='Restaurar'}
     bringFront(win);
@@ -4043,6 +4113,11 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
           Math.max(0,window.innerHeight-42)
         );
 
+        win.style.setProperty('left',`${Math.round(left)}px`,'important');
+        win.style.setProperty('top',`${Math.round(top)}px`,'important');
+        win.style.setProperty('right','auto','important');
+        win.style.setProperty('bottom','auto','important');
+        win.style.setProperty('transform','none','important');
         win.style.setProperty('--erp-win-left',`${Math.round(left)}px`);
         win.style.setProperty('--erp-win-top',`${Math.round(top)}px`);
       };
