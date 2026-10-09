@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v35 - tema corporativo + janelas arrastáveis/redimensionáveis -->
+<!-- GESTAOERP MCloud v36 - corrige loop infinito do gerenciador de janelas -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -3911,37 +3911,23 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
     root.querySelectorAll?.(WINDOW_SELECTOR).forEach(setup);
   }
 
-  function onVisibilityChange(win){
-    if(!win.matches(WINDOW_SELECTOR)) return;
-    const visible=win.classList.contains('show') || getComputedStyle(win).display!=='none';
-    if(visible && !win.classList.contains('erp-window-minimized')){
-      bringFront(win);
-    }else if(!visible){
-      win.classList.remove('erp-window-minimized','erp-window-active');
-      cleanupTray(win);
-      const shade=associatedShade(win);
-      if(shade && win.dataset.erpShadeWasVisible==='1'){
-        shade.classList.remove('show');
-        win.dataset.erpShadeWasVisible='';
-      }
-    }
-  }
-
   function boot(){
     scan(document);
     tray();
 
+    // Observa somente novos elementos adicionados ao DOM.
+    // NÃO observa mudanças de class dos modais, porque bringFront()
+    // também altera classes e isso gerava um ciclo infinito.
     const mo=new MutationObserver(records=>{
       records.forEach(rec=>{
         if(rec.type==='childList'){
-          rec.addedNodes.forEach(n=>{ if(n.nodeType===1) scan(n); });
-        }else if(rec.type==='attributes' && rec.attributeName==='class'){
-          const el=rec.target;
-          if(el.matches?.(WINDOW_SELECTOR)) onVisibilityChange(el);
+          rec.addedNodes.forEach(n=>{
+            if(n.nodeType===1) scan(n);
+          });
         }
       });
     });
-    mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+    mo.observe(document.body,{subtree:true,childList:true});
 
     window.addEventListener('resize',()=>{
       document.querySelectorAll('.erp-window-managed.erp-window-free').forEach(win=>{
