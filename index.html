@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v49 - Movimento compacto + Retenções por Item -->
+<!-- GESTAOERP MCloud v51 - inicia somente com TOTVS News -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -2719,6 +2719,94 @@ window.MCLOUD_CONFIG = {
 }
 </style>
 
+
+<style id="erp-auto-filter-v50-css">
+/* ===== Auto Filtro nas grades (padrão RM) ===== */
+tr.erp-auto-filter-row th{
+  height:27px !important;
+  min-height:27px !important;
+  padding:2px 4px !important;
+  background:#fbfdfe !important;
+  border-top:0 !important;
+  border-bottom:1px solid #d8e2e9 !important;
+  vertical-align:middle !important;
+  position:sticky !important;
+  top:30px !important;
+  z-index:3 !important;
+}
+tr.erp-auto-filter-row th:first-child{
+  text-align:center !important;
+  padding:0 !important;
+}
+.erp-auto-filter-input{
+  width:100% !important;
+  height:22px !important;
+  min-height:22px !important;
+  box-sizing:border-box !important;
+  border:1px solid transparent !important;
+  border-radius:3px !important;
+  padding:0 5px !important;
+  background:transparent !important;
+  color:#244963 !important;
+  font:11px "Segoe UI",Arial,sans-serif !important;
+  outline:none !important;
+}
+.erp-auto-filter-input::placeholder{
+  color:#86a0b2 !important;
+  opacity:1 !important;
+}
+.erp-auto-filter-input:hover{
+  border-color:#d0dde6 !important;
+  background:#fff !important;
+}
+.erp-auto-filter-input:focus,
+.erp-auto-filter-input.has-value{
+  border-color:#7eb5dc !important;
+  background:#fff !important;
+  box-shadow:0 0 0 1px rgba(39,132,197,.06) !important;
+}
+.erp-auto-filter-clear{
+  width:23px !important;
+  height:22px !important;
+  min-width:23px !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:3px !important;
+  background:transparent !important;
+  color:#1a759c !important;
+  font-size:12px !important;
+  cursor:pointer !important;
+}
+.erp-auto-filter-clear:hover{
+  background:#e7f2f9 !important;
+}
+.erp-auto-filter-clear.active{
+  background:#dceef9 !important;
+  color:#075f91 !important;
+}
+.erp-auto-filter-hidden{
+  display:none !important;
+}
+.erp-auto-filter-status{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  color:#39738e;
+  font-size:10px;
+  white-space:nowrap;
+}
+
+/* O cabeçalho principal permanece acima da linha de filtros */
+.rm-grid thead tr:first-child th,
+.v9-grid thead tr:first-child th,
+.mv-grid thead tr:first-child th,
+.cash-grid thead tr:first-child th{
+  position:sticky;
+  top:0;
+  z-index:4;
+}
+</style>
+
 </head>
 <body>
 
@@ -3407,14 +3495,16 @@ const data={
 };
 const nav=document.getElementById('navrow'), ribbon=document.getElementById('ribbon'), docTabs=document.getElementById('documentTabs');
 let activeModule='Cadastros';
-let docs=[{id:'news',title:'TOTVS News'}, {id:'sql',title:'Consultas SQL'}, {id:'sent1',title:'Execução de Sentença SQL'}, {id:'sent2',title:'Execução de Sentença SQL'}, {id:'prod',title:'Produto/Serviço'}, {id:'plan',title:'Plano de Contas Contábil'}];
+let docs=[
+  {id:'news',title:'TOTVS News'}
+];
 let activeDoc='news';
 Object.keys(data).forEach(name=>{const b=document.createElement('button');b.className='navtab'+(name===activeModule?' active':'');b.textContent=name;b.onclick=()=>selectModule(name);nav.appendChild(b)});
 function selectModule(name){activeModule=name;[...nav.children].forEach(x=>x.classList.toggle('active',x.textContent===name));renderRibbon();}
 function renderRibbon(){ribbon.innerHTML='';(data[activeModule]||[]).forEach(([groupName,items])=>{const g=document.createElement('div');g.className='group';const gi=document.createElement('div');gi.className='group-items';items.forEach(([label,type])=>{const b=document.createElement('button');b.className='ribbon-btn'+(label.length>19?' wide':'');b.innerHTML=`<span class="icon">${icon(type)}</span><span class="btn-label">${label}</span>`;b.onclick=()=>openFunction(label);gi.appendChild(b)});const gt=document.createElement('div');gt.className='group-title';gt.textContent=groupName;g.append(gi,gt);ribbon.appendChild(g)});}
 function renderDocs(){docTabs.innerHTML='';docs.forEach(d=>{const el=document.createElement('div');el.className='doc-tab'+(d.id===activeDoc?' active':'');el.innerHTML=`<span class="doc-icon">▣</span><span>${d.title}</span><span class="close">×</span>`;el.onclick=(e)=>{if(e.target.classList.contains('close') && docs.length>1){e.stopPropagation();closeDoc(d.id)} else activateDoc(d.id)};docTabs.appendChild(el)});}
 function activateDoc(id){activeDoc=id;renderDocs();const news=document.querySelector('[data-view="news"]'), gen=document.querySelector('[data-view="generic"]');if(id==='news'){news.classList.add('active');gen.classList.remove('active')}else{news.classList.remove('active');gen.classList.add('active');const d=docs.find(x=>x.id===id);document.getElementById('panelTitle').textContent=d?.title||'Função';}}
-function closeDoc(id){const idx=docs.findIndex(x=>x.id===id);if(idx<0)return;docs.splice(idx,1);if(activeDoc===id)activeDoc=docs[Math.max(0,idx-1)]?.id||docs[0].id;renderDocs();activateDoc(activeDoc)}
+function closeDoc(id){const idx=docs.findIndex(x=>x.id===id);if(idx<0)return;docs.splice(idx,1);if(activeDoc===id)activeDoc=docs[Math.max(0,idx-1)]?.id||docs[0].id;renderDocs();activateDoc('news')}
 function openFunction(label){const id='fn_'+label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_');if(!docs.some(d=>d.id===id))docs.push({id,title:label});activateDoc(id);showToast(`${label} aberto na área de trabalho`)}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__tt);window.__tt=setTimeout(()=>t.classList.remove('show'),1600)}
 renderRibbon();renderDocs();
@@ -5860,6 +5950,249 @@ function executeSettlement(closeAfter){const ctx=settlementContext();if(ctx.erro
 function boot40(){installTMUI();installCashNature();installFinancialProcess()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot40,{once:true});else boot40();
 })();
+
+
+/* ============================================================
+   v50 - Auto Filtro nas grades
+   ============================================================ */
+(function(){
+  const AUTO_FILTER_BODIES = [
+    'lotBody',
+    'entryBody',
+    'hpBody',
+    'cccBody',
+    'lpBody',
+    'payBody',
+    'prodBody',
+    'cfBody',
+    'tmBody',
+    'mvBody',
+    'finBody',
+    'cashBody'
+  ];
+
+  function afNorm(v){
+    return String(v ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .trim();
+  }
+
+  function afNumber(v){
+    let s=String(v ?? '').trim();
+    if(!s)return NaN;
+    s=s.replace(/[R$\s]/g,'');
+    // pt-BR: 1.234,56
+    if(s.includes(',')){
+      s=s.replace(/\./g,'').replace(',','.');
+    }
+    const n=Number(s.replace(/[^0-9.+-]/g,''));
+    return Number.isFinite(n)?n:NaN;
+  }
+
+  function afWildcard(text,pattern){
+    const escaped=afNorm(pattern)
+      .replace(/[.+?^${}()|[\]\\]/g,'\\$&')
+      .replace(/[%*]/g,'.*');
+    try{return new RegExp('^'+escaped+'$','i').test(afNorm(text))}
+    catch(e){return afNorm(text).includes(afNorm(pattern))}
+  }
+
+  function afMatches(cellText,rawQuery){
+    const query=String(rawQuery ?? '').trim();
+    if(!query)return true;
+
+    const text=afNorm(cellText);
+    const q=afNorm(query);
+
+    // Diferente / não contém
+    if(q.startsWith('<>') || q.startsWith('!=')){
+      const value=q.slice(2).trim();
+      return !text.includes(value);
+    }
+    if(q.startsWith('!')){
+      return !text.includes(q.slice(1).trim());
+    }
+
+    // Comparações numéricas
+    const comp=query.match(/^\s*(>=|<=|>|<)\s*(.+)$/);
+    if(comp){
+      const a=afNumber(cellText), b=afNumber(comp[2]);
+      if(!Number.isNaN(a) && !Number.isNaN(b)){
+        if(comp[1]==='>=')return a>=b;
+        if(comp[1]==='<=')return a<=b;
+        if(comp[1]==='>')return a>b;
+        if(comp[1]==='<')return a<b;
+      }
+    }
+
+    // Igualdade exata
+    if(q.startsWith('=')){
+      return text===q.slice(1).trim();
+    }
+
+    // Curingas no padrão RM/SQL
+    if(query.includes('%') || query.includes('*')){
+      return afWildcard(cellText,query);
+    }
+
+    // Comportamento padrão: contém
+    return text.includes(q);
+  }
+
+  function afApply(table){
+    if(!table)return;
+
+    const body=table.tBodies?.[0];
+    const row=table.tHead?.querySelector('tr.erp-auto-filter-row');
+    if(!body || !row)return;
+
+    const inputs=[...row.querySelectorAll('.erp-auto-filter-input')];
+    const active=inputs.some(i=>i.value.trim());
+
+    inputs.forEach(i=>i.classList.toggle('has-value',!!i.value.trim()));
+    row.querySelector('.erp-auto-filter-clear')?.classList.toggle('active',active);
+
+    let visible=0;
+    const dataRows=[...body.rows];
+
+    dataRows.forEach(tr=>{
+      // Linhas de mensagem/empty state não participam da filtragem.
+      if(tr.cells.length===1 && Number(tr.cells[0].colSpan)>1){
+        tr.classList.remove('erp-auto-filter-hidden');
+        return;
+      }
+
+      let ok=true;
+      for(const input of inputs){
+        const q=input.value.trim();
+        if(!q)continue;
+        const index=Number(input.dataset.col);
+        const cell=tr.cells[index];
+        if(!cell || !afMatches(cell.textContent,q)){
+          ok=false;break;
+        }
+      }
+
+      tr.classList.toggle('erp-auto-filter-hidden',!ok);
+      if(ok)visible++;
+    });
+
+    table.dataset.autoFilterVisible=String(visible);
+  }
+
+  function afBuild(table){
+    if(!table?.tHead || !table.tBodies?.[0])return;
+
+    const header=table.tHead.querySelector('tr:not(.erp-auto-filter-row)');
+    if(!header)return;
+
+    const old=table.tHead.querySelector('tr.erp-auto-filter-row');
+    const oldValues={};
+    old?.querySelectorAll('.erp-auto-filter-input').forEach(i=>{
+      oldValues[i.dataset.col]=i.value;
+    });
+
+    if(old && old.cells.length===header.cells.length)return;
+    old?.remove();
+
+    const filter=document.createElement('tr');
+    filter.className='erp-auto-filter-row';
+
+    [...header.cells].forEach((th,index)=>{
+      const cell=document.createElement('th');
+      const title=(th.textContent||'').trim();
+
+      if(index===0 && (!title || title==='[x]' || title.toLowerCase()==='imagem')){
+        const clear=document.createElement('button');
+        clear.type='button';
+        clear.className='erp-auto-filter-clear';
+        clear.title='Limpar Auto Filtro';
+        clear.textContent='▼';
+        clear.onclick=e=>{
+          e.preventDefault();
+          e.stopPropagation();
+          filter.querySelectorAll('.erp-auto-filter-input').forEach(i=>{
+            i.value='';
+            i.classList.remove('has-value');
+          });
+          afApply(table);
+        };
+        cell.appendChild(clear);
+      }else{
+        const input=document.createElement('input');
+        input.className='erp-auto-filter-input';
+        input.dataset.col=String(index);
+        input.autocomplete='off';
+        input.spellcheck=false;
+        input.placeholder='=';
+        input.title=`Auto filtro: ${title || 'coluna'}`;
+        input.value=oldValues[index]||'';
+
+        input.addEventListener('input',()=>afApply(table));
+        input.addEventListener('keydown',e=>{
+          if(e.key==='Escape'){
+            input.value='';
+            afApply(table);
+            input.blur();
+          }
+        });
+        input.addEventListener('click',e=>e.stopPropagation());
+        cell.appendChild(input);
+      }
+
+      filter.appendChild(cell);
+    });
+
+    table.tHead.appendChild(filter);
+    afApply(table);
+  }
+
+  function afInstallBody(id){
+    const body=document.getElementById(id);
+    if(!body)return;
+
+    const table=body.closest('table');
+    if(!table)return;
+
+    table.classList.add('erp-auto-filter-table');
+    afBuild(table);
+
+    // Se a grade for renderizada novamente, reaplica os filtros sem perdê-los.
+    if(!body.__erpAutoFilterObserver){
+      const mo=new MutationObserver(()=>afApply(table));
+      mo.observe(body,{childList:true});
+      body.__erpAutoFilterObserver=mo;
+    }
+
+    // Algumas telas (ex.: Tipo de Movimento) adicionam colunas dinamicamente.
+    if(table.tHead && !table.tHead.__erpAutoFilterObserver){
+      const hm=new MutationObserver(()=>{
+        const header=table.tHead.querySelector('tr:not(.erp-auto-filter-row)');
+        const filter=table.tHead.querySelector('tr.erp-auto-filter-row');
+        if(header && (!filter || filter.cells.length!==header.cells.length)){
+          afBuild(table);
+        }
+      });
+      hm.observe(table.tHead,{childList:true,subtree:true});
+      table.tHead.__erpAutoFilterObserver=hm;
+    }
+  }
+
+  function afInstallAll(){
+    AUTO_FILTER_BODIES.forEach(afInstallBody);
+  }
+
+  // Executa agora e também cobre telas criadas alguns instantes depois.
+  afInstallAll();
+  setTimeout(afInstallAll,100);
+  setTimeout(afInstallAll,500);
+
+  // Expõe para futuras grades/módulos.
+  window.erpInstallAutoFilters=afInstallAll;
+})();
+
 </script>
 <script>
 // GESTAOERP v22 - MCloud client (Cloudflare Worker + D1)
