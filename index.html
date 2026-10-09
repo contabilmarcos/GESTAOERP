@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v36 - corrige loop infinito do gerenciador de janelas -->
+<!-- GESTAOERP MCloud v37 - tabs proporcionais + resize real + z-order de modais -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -1685,6 +1685,134 @@ window.MCLOUD_CONFIG = {
   border-radius:9px !important;
   border-color:#bdcedb !important;
   box-shadow:0 18px 45px rgba(14,38,64,.20) !important;
+}
+</style>
+
+
+<style id="erp-window-fixes-v37">
+/* ===== Abas de documentos proporcionais ===== */
+.document-tabs{
+  display:flex !important;
+  align-items:flex-end !important;
+  gap:3px !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  scrollbar-width:thin;
+}
+.doc-tab{
+  flex:1 1 150px !important;
+  min-width:95px !important;
+  max-width:260px !important;
+  width:auto !important;
+  overflow:hidden !important;
+}
+.doc-tab > .doc-icon{
+  flex:0 0 auto !important;
+}
+.doc-tab > span:nth-child(2){
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+.doc-tab > .close{
+  flex:0 0 auto !important;
+  margin-left:auto !important;
+}
+
+/* ===== Redimensionamento: alças ficam DENTRO da janela ===== */
+.erp-window-managed{
+  position:fixed !important;
+}
+.erp-resize-handle{
+  position:absolute !important;
+  z-index:2147483000 !important;
+  pointer-events:auto !important;
+  touch-action:none !important;
+  user-select:none !important;
+  background:transparent !important;
+}
+.erp-resize-handle[data-dir="n"]{
+  left:8px !important; right:8px !important; top:0 !important;
+  height:6px !important; cursor:n-resize !important;
+}
+.erp-resize-handle[data-dir="s"]{
+  left:8px !important; right:8px !important; bottom:0 !important;
+  height:7px !important; cursor:s-resize !important;
+}
+.erp-resize-handle[data-dir="e"]{
+  top:8px !important; bottom:8px !important; right:0 !important;
+  width:7px !important; cursor:e-resize !important;
+}
+.erp-resize-handle[data-dir="w"]{
+  top:8px !important; bottom:8px !important; left:0 !important;
+  width:7px !important; cursor:w-resize !important;
+}
+.erp-resize-handle[data-dir="ne"]{
+  right:0 !important; top:0 !important;
+  width:12px !important; height:12px !important; cursor:ne-resize !important;
+}
+.erp-resize-handle[data-dir="nw"]{
+  left:0 !important; top:0 !important;
+  width:12px !important; height:12px !important; cursor:nw-resize !important;
+}
+.erp-resize-handle[data-dir="se"]{
+  right:0 !important; bottom:0 !important;
+  width:14px !important; height:14px !important; cursor:se-resize !important;
+}
+.erp-resize-handle[data-dir="sw"]{
+  left:0 !important; bottom:0 !important;
+  width:14px !important; height:14px !important; cursor:sw-resize !important;
+}
+
+/* ===== Conteúdo cresce/diminui junto com a janela ===== */
+#entryModal.erp-window-managed{
+  display:none;
+  flex-direction:column !important;
+}
+#entryModal.erp-window-managed.show{
+  display:flex !important;
+}
+#entryModal .entry-parts{
+  flex:1 1 auto !important;
+  min-height:90px !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+#entryModal .entry-parts-grid{
+  flex:1 1 auto !important;
+  height:auto !important;
+  min-height:70px !important;
+}
+
+#partModal.erp-window-managed{
+  display:none;
+  flex-direction:column !important;
+}
+#partModal.erp-window-managed.show{
+  display:flex !important;
+}
+#partModal .part-form{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow:auto !important;
+}
+
+/* Demais famílias de modal devem usar todo o espaço redimensionado */
+.erp-window-managed .am-body,
+.erp-window-managed .v9-pane.active,
+.erp-window-managed .mv-body,
+.erp-window-managed .mv-content,
+.erp-window-managed .mv-pane.active{
+  min-height:0 !important;
+}
+
+/* realce da janela que está na frente */
+.erp-window-managed.erp-window-active{
+  box-shadow:
+    0 28px 72px rgba(10,45,78,.30),
+    0 0 0 2px rgba(18,111,190,.18) !important;
 }
 </style>
 
@@ -3627,14 +3755,15 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 </script>
 
 
-<script id="erp-window-manager-v35">
+
+<script id="erp-window-manager-v37">
 (function(){
   'use strict';
 
   const WINDOW_SELECTOR = '.account-modal,.cc-modal,.rm-modal,.v9-modal,.mv-modal';
   const TITLE_SELECTOR = ':scope > .am-title,:scope > .v9-title,:scope > .mv-title';
   const DIRS = ['n','s','e','w','ne','nw','se','sw'];
-  let zCounter = 4000;
+  let zCounter = 5000;
 
   function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
 
@@ -3655,7 +3784,10 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
   }
 
   function bringFront(win){
-    document.querySelectorAll(WINDOW_SELECTOR).forEach(w=>w.classList.remove('erp-window-active'));
+    if(!win) return;
+    document.querySelectorAll(WINDOW_SELECTOR).forEach(w=>{
+      if(w!==win) w.classList.remove('erp-window-active');
+    });
     win.classList.add('erp-window-active');
     win.style.setProperty('z-index',String(++zCounter),'important');
   }
@@ -3670,15 +3802,21 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 
   function ensureFree(win){
     if(win.classList.contains('erp-window-free')) return;
-    rectToVars(win,win.getBoundingClientRect());
+    const r=win.getBoundingClientRect();
+    rectToVars(win,r);
   }
 
   function minSize(win){
-    if(win.id==='mvModal') return {w:680,h:400};
-    if(win.id==='partModal') return {w:620,h:260};
-    if(win.id==='entryModal') return {w:540,h:330};
-    if(win.classList.contains('v9-prod-modal')) return {w:600,h:420};
-    return {w:340,h:210};
+    let w=340,h=210;
+    if(win.id==='mvModal'){w=520;h=340}
+    else if(win.id==='partModal'){w=480;h=240}
+    else if(win.id==='entryModal'){w=430;h=280}
+    else if(win.classList.contains('v9-prod-modal')){w=480;h=340}
+
+    return {
+      w:Math.min(w,Math.max(280,window.innerWidth-18)),
+      h:Math.min(h,Math.max(180,window.innerHeight-18))
+    };
   }
 
   function associatedShade(win){
@@ -3696,24 +3834,27 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
     return null;
   }
 
+  function cleanupTray(win){
+    if(!win.id) return;
+    document.querySelectorAll('.erp-tray-item').forEach(item=>{
+      if(item.dataset.window===win.id) item.remove();
+    });
+  }
+
   function maximize(win){
     if(win.classList.contains('erp-window-maximized')){
       win.classList.remove('erp-window-maximized');
       win.classList.add('erp-window-free');
       const maxBtn=win.querySelector('.erp-win-max');
-      if(maxBtn){ maxBtn.textContent='□'; maxBtn.title='Maximizar'; }
+      if(maxBtn){maxBtn.textContent='□';maxBtn.title='Maximizar'}
+      bringFront(win);
       return;
     }
     ensureFree(win);
     win.classList.add('erp-window-maximized');
     const maxBtn=win.querySelector('.erp-win-max');
-    if(maxBtn){ maxBtn.textContent='❐'; maxBtn.title='Restaurar'; }
+    if(maxBtn){maxBtn.textContent='❐';maxBtn.title='Restaurar'}
     bringFront(win);
-  }
-
-  function cleanupTray(win){
-    const item=document.querySelector(`.erp-tray-item[data-window="${CSS.escape(win.id)}"]`);
-    item?.remove();
   }
 
   function restoreMinimized(win){
@@ -3729,21 +3870,25 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 
   function minimize(win){
     if(win.classList.contains('erp-window-minimized')) return;
+
     const shade=associatedShade(win);
     if(shade?.classList.contains('show')){
       win.dataset.erpShadeWasVisible='1';
       shade.classList.remove('show');
     }
+
     win.classList.add('erp-window-minimized');
 
-    const item=document.createElement('button');
-    item.type='button';
-    item.className='erp-tray-item';
-    item.dataset.window=win.id;
-    item.title='Restaurar janela';
-    item.textContent=titleText(win);
-    item.addEventListener('click',()=>restoreMinimized(win));
-    tray().appendChild(item);
+    if(win.id){
+      const item=document.createElement('button');
+      item.type='button';
+      item.className='erp-tray-item';
+      item.dataset.window=win.id;
+      item.title='Restaurar janela';
+      item.textContent=titleText(win);
+      item.addEventListener('click',()=>restoreMinimized(win));
+      tray().appendChild(item);
+    }
   }
 
   function addControls(win,title){
@@ -3782,7 +3927,6 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
       close.type='button';
       close.className='erp-win-close';
       close.title='Fechar';
-      close.setAttribute('aria-label','Fechar');
       close.textContent='×';
       close.addEventListener('click',()=>{
         win.classList.remove('show');
@@ -3793,12 +3937,19 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 
     title.appendChild(controls);
 
-    min.addEventListener('click',e=>{e.stopPropagation();minimize(win)});
-    max.addEventListener('click',e=>{e.stopPropagation();maximize(win)});
+    min.addEventListener('click',e=>{
+      e.stopPropagation();
+      minimize(win);
+    });
+    max.addEventListener('click',e=>{
+      e.stopPropagation();
+      maximize(win);
+    });
   }
 
   function addResizeHandles(win){
     if(win.querySelector('.erp-resize-handle')) return;
+
     DIRS.forEach(dir=>{
       const h=document.createElement('div');
       h.className='erp-resize-handle';
@@ -3806,36 +3957,42 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
       win.appendChild(h);
 
       h.addEventListener('pointerdown',e=>{
-        if(win.classList.contains('erp-window-maximized')) return;
+        if(e.button!==0 || win.classList.contains('erp-window-maximized')) return;
+
         e.preventDefault();
         e.stopPropagation();
         bringFront(win);
         ensureFree(win);
 
         const start=win.getBoundingClientRect();
-        const sx=e.clientX, sy=e.clientY;
-        const min=minSize(win);
-        h.setPointerCapture?.(e.pointerId);
+        const sx=e.clientX;
+        const sy=e.clientY;
+        const minimum=minSize(win);
 
         const move=ev=>{
-          const dx=ev.clientX-sx, dy=ev.clientY-sy;
-          let left=start.left, top=start.top, width=start.width, height=start.height;
+          const dx=ev.clientX-sx;
+          const dy=ev.clientY-sy;
 
-          if(dir.includes('e')) width=Math.max(min.w,start.width+dx);
-          if(dir.includes('s')) height=Math.max(min.h,start.height+dy);
+          let left=start.left;
+          let top=start.top;
+          let width=start.width;
+          let height=start.height;
+
+          if(dir.includes('e')) width=Math.max(minimum.w,start.width+dx);
+          if(dir.includes('s')) height=Math.max(minimum.h,start.height+dy);
+
           if(dir.includes('w')){
-            const newW=Math.max(min.w,start.width-dx);
-            left=start.right-newW;
-            width=newW;
+            width=Math.max(minimum.w,start.width-dx);
+            left=start.right-width;
           }
           if(dir.includes('n')){
-            const newH=Math.max(min.h,start.height-dy);
-            top=start.bottom-newH;
-            height=newH;
+            height=Math.max(minimum.h,start.height-dy);
+            top=start.bottom-height;
           }
 
-          left=clamp(left,0,Math.max(0,window.innerWidth-80));
+          left=clamp(left,0,Math.max(0,window.innerWidth-minimum.w));
           top=clamp(top,0,Math.max(0,window.innerHeight-44));
+
           width=Math.min(width,window.innerWidth-left);
           height=Math.min(height,window.innerHeight-top);
 
@@ -3843,14 +4000,19 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
         };
 
         const up=()=>{
-          h.removeEventListener('pointermove',move);
-          h.removeEventListener('pointerup',up);
-          h.removeEventListener('pointercancel',up);
+          window.removeEventListener('pointermove',move,true);
+          window.removeEventListener('pointerup',up,true);
+          window.removeEventListener('pointercancel',up,true);
+          document.body.style.cursor='';
+          document.body.style.userSelect='';
         };
 
-        h.addEventListener('pointermove',move);
-        h.addEventListener('pointerup',up);
-        h.addEventListener('pointercancel',up);
+        document.body.style.cursor=getComputedStyle(h).cursor;
+        document.body.style.userSelect='none';
+
+        window.addEventListener('pointermove',move,true);
+        window.addEventListener('pointerup',up,true);
+        window.addEventListener('pointercancel',up,true);
       });
     });
   }
@@ -3866,23 +4028,36 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
       ensureFree(win);
 
       const start=win.getBoundingClientRect();
-      const sx=e.clientX, sy=e.clientY;
-      title.setPointerCapture?.(e.pointerId);
+      const sx=e.clientX;
+      const sy=e.clientY;
 
       const move=ev=>{
-        const left=clamp(start.left+(ev.clientX-sx),0,Math.max(0,window.innerWidth-start.width));
-        const top=clamp(start.top+(ev.clientY-sy),0,Math.max(0,window.innerHeight-42));
+        const left=clamp(
+          start.left+(ev.clientX-sx),
+          0,
+          Math.max(0,window.innerWidth-Math.min(120,start.width))
+        );
+        const top=clamp(
+          start.top+(ev.clientY-sy),
+          0,
+          Math.max(0,window.innerHeight-42)
+        );
+
         win.style.setProperty('--erp-win-left',`${Math.round(left)}px`);
         win.style.setProperty('--erp-win-top',`${Math.round(top)}px`);
       };
+
       const up=()=>{
-        title.removeEventListener('pointermove',move);
-        title.removeEventListener('pointerup',up);
-        title.removeEventListener('pointercancel',up);
+        window.removeEventListener('pointermove',move,true);
+        window.removeEventListener('pointerup',up,true);
+        window.removeEventListener('pointercancel',up,true);
+        document.body.style.userSelect='';
       };
-      title.addEventListener('pointermove',move);
-      title.addEventListener('pointerup',up);
-      title.addEventListener('pointercancel',up);
+
+      document.body.style.userSelect='none';
+      window.addEventListener('pointermove',move,true);
+      window.addEventListener('pointerup',up,true);
+      window.addEventListener('pointercancel',up,true);
     });
 
     title.addEventListener('dblclick',e=>{
@@ -3893,12 +4068,14 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 
   function setup(win){
     if(!win || win.dataset.erpWindowManaged==='1') return;
+
     const title=win.querySelector(TITLE_SELECTOR);
     if(!title) return;
 
     win.dataset.erpWindowManaged='1';
     win.classList.add('erp-window-managed');
     title.classList.add('erp-window-titlebar');
+
     addControls(win,title);
     addResizeHandles(win);
     enableDrag(win,title);
@@ -3911,39 +4088,80 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
     root.querySelectorAll?.(WINDOW_SELECTOR).forEach(setup);
   }
 
+  function classHas(value,name){
+    return (` ${value||''} `).includes(` ${name} `);
+  }
+
   function boot(){
     scan(document);
     tray();
 
-    // Observa somente novos elementos adicionados ao DOM.
-    // NÃO observa mudanças de class dos modais, porque bringFront()
-    // também altera classes e isso gerava um ciclo infinito.
     const mo=new MutationObserver(records=>{
       records.forEach(rec=>{
         if(rec.type==='childList'){
           rec.addedNodes.forEach(n=>{
             if(n.nodeType===1) scan(n);
           });
+          return;
+        }
+
+        if(rec.type==='attributes' && rec.attributeName==='class'){
+          const win=rec.target;
+          if(!win.matches?.(WINDOW_SELECTOR)) return;
+
+          const wasShown=classHas(rec.oldValue,'show');
+          const isShown=win.classList.contains('show');
+
+          // Só reage à TRANSIÇÃO de fechado -> aberto.
+          // Alterações de erp-window-active não entram aqui,
+          // então não existe o loop da versão anterior.
+          if(!wasShown && isShown){
+            if(win.classList.contains('erp-window-minimized')){
+              win.classList.remove('erp-window-minimized');
+              cleanupTray(win);
+            }
+            bringFront(win);
+          }
+
+          if(wasShown && !isShown){
+            cleanupTray(win);
+            win.classList.remove('erp-window-active','erp-window-minimized');
+          }
         }
       });
     });
-    mo.observe(document.body,{subtree:true,childList:true});
+
+    mo.observe(document.body,{
+      subtree:true,
+      childList:true,
+      attributes:true,
+      attributeFilter:['class'],
+      attributeOldValue:true
+    });
 
     window.addEventListener('resize',()=>{
       document.querySelectorAll('.erp-window-managed.erp-window-free').forEach(win=>{
         const r=win.getBoundingClientRect();
-        const left=clamp(r.left,0,Math.max(0,window.innerWidth-80));
+        const minimum=minSize(win);
+
+        const width=Math.min(r.width,window.innerWidth);
+        const height=Math.min(r.height,window.innerHeight);
+        const left=clamp(r.left,0,Math.max(0,window.innerWidth-Math.min(minimum.w,width)));
         const top=clamp(r.top,0,Math.max(0,window.innerHeight-42));
-        if(left!==r.left) win.style.setProperty('--erp-win-left',`${Math.round(left)}px`);
-        if(top!==r.top) win.style.setProperty('--erp-win-top',`${Math.round(top)}px`);
+
+        rectToVars(win,{left,top,width,height});
       });
     });
   }
 
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
-  else boot();
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',boot,{once:true});
+  }else{
+    boot();
+  }
 })();
 </script>
+
 
 </body>
 </html>
