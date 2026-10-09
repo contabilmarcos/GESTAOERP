@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v44 - Default de Baixa integrado ao save do Tipo Movimento -->
+<!-- GESTAOERP MCloud v45 - abre Default de Baixa centralizado e acima -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -2329,6 +2329,41 @@ window.MCLOUD_CONFIG = {
 }
 </style>
 
+
+<style id="tm-default-baixa-open-v45">
+#tmLowModal.tm-low-modal{
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%) !important;
+  width:min(980px,calc(100vw - 60px)) !important;
+  height:min(470px,calc(100vh - 70px)) !important;
+  max-width:none !important;
+  max-height:none !important;
+}
+#tmLowModal.show{
+  display:flex !important;
+  z-index:20050 !important;
+}
+
+#tmLowEditModal.tm-low-editor{
+  left:50% !important;
+  top:50% !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%) !important;
+  width:min(700px,calc(100vw - 60px)) !important;
+  height:min(500px,calc(100vh - 70px)) !important;
+  max-width:none !important;
+  max-height:none !important;
+}
+#tmLowEditModal.show{
+  display:flex !important;
+  z-index:20100 !important;
+}
+</style>
+
 </head>
 <body>
 
@@ -4650,13 +4685,20 @@ function installTMUI(){
       <div class="v9-footer"><button id="tmLowEditOk">OK</button><button id="tmLowEditCancel">Cancelar</button></div>
     </div>`);
 
-  q('tmLowClose').onclick=q('tmLowCancel').onclick=()=>q('tmLowModal').classList.remove('show');
-  q('tmLowOk').onclick=()=>{persistTMExtras();q('tmLowModal').classList.remove('show')};
+  q('tmLowClose').onclick=q('tmLowCancel').onclick=()=>{
+    const m=q('tmLowModal');m.classList.remove('show');m.style.removeProperty('display');m.style.removeProperty('z-index');
+  };
+  q('tmLowOk').onclick=()=>{
+    persistTMExtras();
+    const m=q('tmLowModal');m.classList.remove('show');m.style.removeProperty('display');m.style.removeProperty('z-index');
+  };
   q('tmLowSave').onclick=()=>{persistTMExtras();showToast('Default de Baixa salvo')};
   q('tmLowNew').onclick=()=>openLowEditor(-1);
   q('tmLowEdit').onclick=()=>lowSel<0?alert('Selecione um default de baixa.'):openLowEditor(lowSel);
   q('tmLowDelete').onclick=()=>{if(lowSel<0)return alert('Selecione um default de baixa.');if(confirm('Excluir o default de baixa selecionado?')){lowDraft.splice(lowSel,1);lowSel=-1;renderLow()}};
-  q('tmLowEditClose').onclick=q('tmLowEditCancel').onclick=()=>q('tmLowEditModal').classList.remove('show');
+  q('tmLowEditClose').onclick=q('tmLowEditCancel').onclick=()=>{
+    const m=q('tmLowEditModal');m.classList.remove('show');m.style.removeProperty('display');m.style.removeProperty('z-index');
+  };
   q('tmLowEditOk').onclick=saveLowEditor;
   ['tmLowAccount','tmLowCost','tmLowHist'].forEach(id=>q(id).addEventListener('input',lowAutofill));
 
@@ -4668,6 +4710,15 @@ function installTMUI(){
   const body=q('tmBody');if(body)new MutationObserver(augmentTMGrid).observe(body,{childList:true});
   augmentTMGrid();
 }
+
+document.addEventListener('click',function(e){
+  const btn=e.target.closest?.('#tmSettlementDefaults');
+  if(!btn)return;
+  e.preventDefault();
+  e.stopPropagation();
+  openLowDefaults();
+},true);
+
 function fillLowLots(){const sel=q('tmSettlementLot');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione o lote de baixa...</option>'+lots40().map(l=>`<option value="${l.id}">${esc40(l.code)} - ${esc40(l.description)}</option>`).join('');if([...sel.options].some(o=>o.value===String(cur)))sel.value=String(cur)}
 function currentTMRecord(){const code=q('tmNumber')?.value.trim();return types40().find(x=>String(x.number)===String(code))||null}
 function loadTMExtras(){
@@ -4709,10 +4760,38 @@ function persistTMExtras(){
   augmentTMGrid();
 }
 function renderLow(){const body=q('tmLowBody');if(!body)return;body.innerHTML=lowDraft.length?lowDraft.map((r,i)=>`<tr data-i="${i}" class="${i===lowSel?'selected':''}"><td>${esc40(r.account||'')}</td><td>${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR',{minimumFractionDigits:4})}</td><td>${esc40(r.branch||'')}</td><td>${esc40(r.dept||'')}</td><td>${esc40(r.cost||'')}</td><td>${esc40(r.history||'')}</td><td>${esc40(r.complement||'')}</td></tr>`).join(''):'<tr><td colspan="8" style="padding:20px;color:#718497">Nenhum Default de Baixa cadastrado.</td></tr>';body.querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>{lowSel=Number(tr.dataset.i);renderLow()});q('tmLowTotal').textContent=lowDraft.reduce((s,r)=>s+Number(r.percent??100),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
-function openLowDefaults(){loadTMExtras();renderLow();q('tmLowModal').classList.add('show')}
-function openLowEditor(i){lowEdit=i;const r=i>=0?lowDraft[i]:{};q('tmLowAccount').value=r.account||'';q('tmLowBranch').value=r.branch||'';q('tmLowDept').value=r.dept||'';q('tmLowCost').value=r.cost||'';q('tmLowHist').value=r.history||'';q('tmLowComp').value=r.complement||'';q('tmLowPercent').value=r.percent??100;lowAutofill();q('tmLowEditModal').classList.add('show')}
+function openLowDefaults(){
+  loadTMExtras();
+  renderLow();
+  const modal=q('tmLowModal');
+  if(!modal)return alert('Não foi possível abrir o Default de Baixa.');
+  modal.classList.add('show');
+  modal.style.setProperty('display','flex','important');
+  modal.style.setProperty('z-index','20050','important');
+}
+function openLowEditor(i){
+  lowEdit=i;
+  const r=i>=0?lowDraft[i]:{};
+  q('tmLowAccount').value=r.account||'';
+  q('tmLowBranch').value=r.branch||'';
+  q('tmLowDept').value=r.dept||'';
+  q('tmLowCost').value=r.cost||'';
+  q('tmLowHist').value=r.history||'';
+  q('tmLowComp').value=r.complement||'';
+  q('tmLowPercent').value=r.percent??100;
+  lowAutofill();
+  const modal=q('tmLowEditModal');
+  modal.classList.add('show');
+  modal.style.setProperty('display','flex','important');
+  modal.style.setProperty('z-index','20100','important');
+}
 function lowAutofill(){const a=typeof pcByCode==='function'?pcByCode(q('tmLowAccount').value.trim()):null,c=typeof ccByCode==='function'?ccByCode(q('tmLowCost').value.trim()):null,h=typeof hpByCode==='function'?hpByCode(q('tmLowHist').value.trim()):null;q('tmLowAccountDesc').value=a?.description||'';q('tmLowCostDesc').value=c?.name||'';q('tmLowHistDesc').value=h?.description||''}
-function saveLowEditor(){const account=q('tmLowAccount').value.trim(),percent=Number(q('tmLowPercent').value)||0;if(!account)return alert('Informe a conta contábil de Débito.');if(percent<=0)return alert('Informe um percentual maior que zero.');const a=typeof pcByCode==='function'?pcByCode(account):null;if(a?.type&&a.type!=='analytic')return alert('Selecione uma conta analítica.');const r={account,accountDesc:a?.description||'',branch:q('tmLowBranch').value.trim(),dept:q('tmLowDept').value.trim(),cost:q('tmLowCost').value.trim(),history:q('tmLowHist').value.trim(),complement:q('tmLowComp').value.trim(),percent};if(lowEdit>=0)lowDraft[lowEdit]=r;else lowDraft.push(r);lowSel=lowEdit>=0?lowEdit:lowDraft.length-1;renderLow();q('tmLowEditModal').classList.remove('show')}
+function saveLowEditor(){const account=q('tmLowAccount').value.trim(),percent=Number(q('tmLowPercent').value)||0;if(!account)return alert('Informe a conta contábil de Débito.');if(percent<=0)return alert('Informe um percentual maior que zero.');const a=typeof pcByCode==='function'?pcByCode(account):null;if(a?.type&&a.type!=='analytic')return alert('Selecione uma conta analítica.');const r={account,accountDesc:a?.description||'',branch:q('tmLowBranch').value.trim(),dept:q('tmLowDept').value.trim(),cost:q('tmLowCost').value.trim(),history:q('tmLowHist').value.trim(),complement:q('tmLowComp').value.trim(),percent};if(lowEdit>=0)lowDraft[lowEdit]=r;else lowDraft.push(r);lowSel=lowEdit>=0?lowEdit:lowDraft.length-1;renderLow();
+const m=q('tmLowEditModal');
+m.classList.remove('show');
+m.style.removeProperty('display');
+m.style.removeProperty('z-index');
+}
 function augmentTMGrid(){const body=q('tmBody');if(!body)return;const table=body.closest('table'),head=table?.querySelector('thead tr');if(head&&!head.querySelector('[data-low-col]')){const a=document.createElement('th');a.dataset.lowCol='1';a.textContent='Cód. Lote Baixa';a.style.width='130px';const b=document.createElement('th');b.dataset.lowCol='1';b.textContent='Lote de Baixa';head.append(a,b)}const arr=types40();body.querySelectorAll('tr[data-id]').forEach(tr=>{if(tr.querySelector('[data-low-cell]'))return;const r=arr.find(x=>String(x.id)===String(tr.dataset.id)),lot=lots40().find(l=>String(l.id)===String(r?.settlementLotId));const a=document.createElement('td');a.dataset.lowCell='1';a.textContent=lot?.code||'';const b=document.createElement('td');b.dataset.lowCell='1';b.textContent=lot?`${lot.code} - ${lot.description}`:'';tr.append(a,b)});const empty=body.querySelector('tr:not([data-id]) td[colspan]');if(empty)empty.colSpan=7}
 
 /* ---------------- CONTA / CAIXA + NATUREZA ---------------- */
