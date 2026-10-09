@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v45 - abre Default de Baixa centralizado e acima -->
+<!-- GESTAOERP MCloud v46 - Lote de Baixa não reseta ao perder foco -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -4702,11 +4702,38 @@ function installTMUI(){
   q('tmLowEditOk').onclick=saveLowEditor;
   ['tmLowAccount','tmLowCost','tmLowHist'].forEach(id=>q(id).addEventListener('input',lowAutofill));
 
+  q('tmSettlementLot')?.addEventListener('change',()=>{
+    const value=q('tmSettlementLot').value;
+    try{
+      const code=q('tmNumber')?.value.trim();
+      const mem=typeof tmItems!=='undefined'
+        ? tmItems.find(x=>String(x.number)===String(code))
+        : null;
+      if(mem)mem.settlementLotId=value?Number(value):null;
+    }catch(e){}
+  });
+
   [q('tmSave'),q('tmOk')].forEach(btn=>btn?.addEventListener('click',()=>setTimeout(persistTMExtras,0)));
   q('tmRefresh')?.addEventListener('click',()=>setTimeout(augmentTMGrid,0));
 
-  const mo=new MutationObserver(()=>{if(modal.classList.contains('show'))loadTMExtras()});
-  mo.observe(modal,{attributes:true,attributeFilter:['class']});
+  // Recarrega Lote/Default de Baixa somente quando a janela passa
+  // realmente de FECHADA -> ABERTA. Mudanças como erp-window-active
+  // não podem resetar os campos que o usuário acabou de preencher.
+  const mo=new MutationObserver(records=>{
+    for(const rec of records){
+      const before=` ${rec.oldValue||''} `;
+      const wasOpen=before.includes(' show ');
+      const isOpen=modal.classList.contains('show');
+      if(!wasOpen && isOpen){
+        loadTMExtras();
+      }
+    }
+  });
+  mo.observe(modal,{
+    attributes:true,
+    attributeFilter:['class'],
+    attributeOldValue:true
+  });
   const body=q('tmBody');if(body)new MutationObserver(augmentTMGrid).observe(body,{childList:true});
   augmentTMGrid();
 }
@@ -4721,12 +4748,28 @@ document.addEventListener('click',function(e){
 
 function fillLowLots(){const sel=q('tmSettlementLot');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione o lote de baixa...</option>'+lots40().map(l=>`<option value="${l.id}">${esc40(l.code)} - ${esc40(l.description)}</option>`).join('');if([...sel.options].some(o=>o.value===String(cur)))sel.value=String(cur)}
 function currentTMRecord(){const code=q('tmNumber')?.value.trim();return types40().find(x=>String(x.number)===String(code))||null}
-function loadTMExtras(){
+function loadTMExtras(options={}){
+  const preserveLot=!!options.preserveLot;
+  const preserveDefaults=!!options.preserveDefaults;
+
+  const lotBefore=q('tmSettlementLot')?.value||'';
+  const defaultsBefore=clone(lowDraft||[]);
+
   fillLowLots();
+
   const r=currentTMRecord();
   currentTMId=r?.id||null;
-  q('tmSettlementLot').value=r?.settlementLotId?String(r.settlementLotId):'';
-  lowDraft=clone(r?.settlementDefaults?.debit||[]);
+
+  if(preserveLot && lotBefore){
+    q('tmSettlementLot').value=lotBefore;
+  }else{
+    q('tmSettlementLot').value=r?.settlementLotId?String(r.settlementLotId):'';
+  }
+
+  lowDraft=preserveDefaults
+    ? defaultsBefore
+    : clone(r?.settlementDefaults?.debit||[]);
+
   lowSel=-1;
   augmentTMGrid();
 }
@@ -4761,7 +4804,9 @@ function persistTMExtras(){
 }
 function renderLow(){const body=q('tmLowBody');if(!body)return;body.innerHTML=lowDraft.length?lowDraft.map((r,i)=>`<tr data-i="${i}" class="${i===lowSel?'selected':''}"><td>${esc40(r.account||'')}</td><td>${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR',{minimumFractionDigits:4})}</td><td>${esc40(r.branch||'')}</td><td>${esc40(r.dept||'')}</td><td>${esc40(r.cost||'')}</td><td>${esc40(r.history||'')}</td><td>${esc40(r.complement||'')}</td></tr>`).join(''):'<tr><td colspan="8" style="padding:20px;color:#718497">Nenhum Default de Baixa cadastrado.</td></tr>';body.querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>{lowSel=Number(tr.dataset.i);renderLow()});q('tmLowTotal').textContent=lowDraft.reduce((s,r)=>s+Number(r.percent??100),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
 function openLowDefaults(){
-  loadTMExtras();
+  // Não recarrega o registro salvo por cima do que o usuário está
+  // preenchendo no Tipo de Movimento neste momento.
+  loadTMExtras({preserveLot:true,preserveDefaults:true});
   renderLow();
   const modal=q('tmLowModal');
   if(!modal)return alert('Não foi possível abrir o Default de Baixa.');
