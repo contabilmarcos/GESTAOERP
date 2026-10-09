@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v40 - Baixa Financeira + Default de Baixa -->
+<!-- GESTAOERP MCloud v41 - Contas/Caixa realmente integrado -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -3527,7 +3527,39 @@ render();
       ]]
     ],
     'Contas a Pagar / Receber':[],
-    'Movimentações Bancárias':[],
+    'Movimentações Bancárias':[
+      ['Controle Bancário',[
+        ['Extratos de Caixa','money'],
+        ['Contas/Caixa','doc'],
+        ['Bancos e Agências','grid'],
+        ['Contas Correntes','doc'],
+        ['Convênio','link'],
+        ['Motivos Devolução Cheque','doc'],
+        ['Posição Financeira','chart']
+      ]],
+      ['Moedas',[
+        ['Moedas e Índices','money'],
+        ['Cotações','money'],
+        ['Download de Cotações','doc']
+      ]],
+      ['Integração Bancária',[
+        ['DDA - Débito Direto Autorizado','doc'],
+        ['Conciliação Bancária','grid'],
+        ['Borderô de Pagamentos','doc'],
+        ['Cadastro Bancário','grid'],
+        ['Retorno Bancário','doc'],
+        ['Processos em Lote','doc'],
+        ['Processo Múltiplas Remessas','doc']
+      ]],
+      ['Aplicação Financeira',[
+        ['Aplicação Financeira','chart']
+      ]],
+      ['Cartão de Crédito/Débito',[
+        ['Transações','doc'],
+        ['Conciliação','grid'],
+        ['Mais...','doc']
+      ]]
+    ],
     'Caixa':[],
     'Gestão Financeira':[],
     'Utilitários':[],
@@ -3783,408 +3815,9 @@ mvRender();finRender();
 // Se o módulo atual já estiver aberto numa dessas abas, redesenha a ribbon para exibir as novas funções.
 try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 })();
-</script>
-<script>
-// GESTAOERP v22 - MCloud client (Cloudflare Worker + D1)
-// No database password or administrative API secret belongs in this file.
-(function(){
-  'use strict';
-
-  const CFG=window.MCLOUD_CONFIG||{};
-  const API=String(CFG.apiBase||'').replace(/\/$/,'');
-  const APP_ID=String(CFG.appId||'gestaoerp').trim()||'gestaoerp';
-  const APP_SCRIPT=String(CFG.appScript||'./gestaoerp-app.js');
-  const SESSION_KEYS={
-    token:'gestaoerp_mcloud_token',
-    user:'gestaoerp_mcloud_user',
-    version:'gestaoerp_mcloud_version',
-    updatedAt:'gestaoerp_mcloud_updatedAt'
-  };
-  const LOCAL_ONLY_KEYS=new Set(['rm_modulo_atual_v11']);
-  const DATA_KEYS=new Set([
-    'rm_plano_contas_contabil_v3',
-    'rm_plano_contas_meta_v3',
-    'rm_centros_custos_v1',
-    'rm_classificacao_centros_custos_v1',
-    'rm_historicos_padroes_v1',
-    'rm_lotes_v1',
-    'rm_lancamentos_contabeis_v1',
-    'rm_lancamentos_contabeis_seq_v1',
-    'rm_lancamentos_periodicos_v1',
-    'rm_meios_pagamento_v9',
-    'rm_naturezas_orc_v9',
-    'rm_produtos_v9',
-    'rm_clientes_fornecedores_v9',
-    'rm_tipos_movimento_v1',
-    'rm_movimentos_v12',
-    'rm_lancamentos_financeiros_v12',
-    'rm_condicoes_pagamento_v15'
-  ]);
-
-  const q=id=>document.getElementById(id);
-  const nativeLocal=window.localStorage;
-  let memory=Object.create(null);
-  let syncEnabled=false;
-  let appLoaded=false;
-
-  const clone=v=>JSON.parse(JSON.stringify(v));
-  const isManaged=k=>DATA_KEYS.has(String(k||''))&&!LOCAL_ONLY_KEYS.has(String(k||''));
-
-  window.erpStorage={
-    getItem(k){
-      k=String(k);
-      if(isManaged(k))return Object.prototype.hasOwnProperty.call(memory,k)?memory[k]:null;
-      try{return nativeLocal.getItem(k)}catch(e){return null}
-    },
-    setItem(k,v){
-      k=String(k);
-      if(isManaged(k)){
-        memory[k]=String(v);
-        if(syncEnabled)window.MCloud?.schedulePush?.();
-        return;
-      }
-      try{nativeLocal.setItem(k,String(v))}catch(e){}
-    },
-    removeItem(k){
-      k=String(k);
-      if(isManaged(k)){
-        delete memory[k];
-        if(syncEnabled)window.MCloud?.schedulePush?.();
-        return;
-      }
-      try{nativeLocal.removeItem(k)}catch(e){}
-    },
-    setManagedSilent(k,v){k=String(k);if(isManaged(k))memory[k]=String(v)},
-    replaceManaged(kv){
-      memory=Object.create(null);
-      for(const [k,v] of Object.entries(kv||{}))if(isManaged(k))memory[k]=String(v);
-    },
-    exportManaged(){return clone(memory)},
-    setSyncEnabled(v){syncEnabled=!!v},
-    clearManaged(){memory=Object.create(null)},
-    dataKeys(){return [...DATA_KEYS]}
-  };
-
-  function legacySnapshot(){
-    const out={};
-    for(const k of DATA_KEYS){
-      try{const v=nativeLocal.getItem(k);if(v!==null)out[k]=v}catch(e){}
-    }
-    return out;
-  }
-  function purgeLegacy(){for(const k of DATA_KEYS){try{nativeLocal.removeItem(k)}catch(e){}}}
-  function hasKV(kv){return Object.keys(kv||{}).some(k=>DATA_KEYS.has(k))}
-  function cloudState(){return{format:'GESTAOERPCloudState',schemaVersion:1,appId:APP_ID,kv:erpStorage.exportManaged()}}
-  function extractKV(data){
-    if(!data||typeof data!=='object')return{};
-    if(data.format==='GESTAOERPCloudState'&&data.kv&&typeof data.kv==='object')return data.kv;
-    if(data.format==='GESTAOERPBackup'&&data.data?.kv)return data.data.kv;
-    if(data.data?.format==='GESTAOERPCloudState'&&data.data.kv)return data.data.kv;
-    if(Object.keys(data).some(k=>DATA_KEYS.has(k)))return data;
-    return{};
-  }
-  function normalizeAccountingIdsInMemory(){
-    try{
-      const key='rm_lancamentos_contabeis_v1',seqKey='rm_lancamentos_contabeis_seq_v1';
-      const a=JSON.parse(erpStorage.getItem(key)||'[]');
-      if(!Array.isArray(a)){erpStorage.setManagedSilent(seqKey,'0');return 0}
-      let seq=Math.max(0,...a.map(x=>Number(x.idNumber)||0));
-      const used=new Set();let changed=false;
-      for(const e of a){
-        let n=Number(e.idNumber)||0;
-        if(n<=0||used.has(n)){n=++seq;e.idNumber=n;changed=true}
-        used.add(n);if(n>seq)seq=n;
-      }
-      if(changed)erpStorage.setManagedSilent(key,JSON.stringify(a));
-      erpStorage.setManagedSilent(seqKey,String(seq));
-      return seq;
-    }catch(e){erpStorage.setManagedSilent('rm_lancamentos_contabeis_seq_v1','0');return 0}
-  }
-  function maxAccountingIdFromMemory(){return normalizeAccountingIdsInMemory()}
-
-  function setStatus(mode,text){
-    const e=q('erpCloudStatus'),t=q('erpCloudStatusText');
-    if(!e||!t)return;
-    e.classList.remove('ok','error','sync','conflict');
-    e.classList.add(mode||'sync');
-    t.textContent=text||'MCloud';
-  }
-  function showMessage(id,text,type=''){
-    const e=q(id);if(!e)return;
-    e.textContent=text;
-    e.className='erp-cloud-msg show'+(type?' '+type:'');
-  }
-  function clearMessage(id){const e=q(id);if(e)e.className='erp-cloud-msg'}
-  function openGate(){const e=q('erpCloudGate');if(e)e.style.display='flex'}
-  function closeGate(){const e=q('erpCloudGate');if(e)e.style.display='none'}
-  function openAccount(){if(!CLOUD.isLogged()){openGate();return}updateAccountUI();q('erpAccountOverlay')?.classList.add('show')}
-  function closeAccount(){q('erpAccountOverlay')?.classList.remove('show')}
-
-  const CLOUD={
-    token:null,user:null,version:0,updatedAt:0,pushTimer:null,pushing:false,conflict:false,loaded:false,
-    initSession(){
-      this.token=sessionStorage.getItem(SESSION_KEYS.token)||null;
-      try{this.user=JSON.parse(sessionStorage.getItem(SESSION_KEYS.user)||'null')}catch(e){this.user=null}
-      this.version=Number(sessionStorage.getItem(SESSION_KEYS.version)||0)||0;
-      this.updatedAt=Number(sessionStorage.getItem(SESSION_KEYS.updatedAt)||0)||0;
-    },
-    isLogged(){return!!this.token},
-    saveSession(token,user){
-      this.token=token;this.user=user||null;
-      sessionStorage.setItem(SESSION_KEYS.token,token);
-      sessionStorage.setItem(SESSION_KEYS.user,JSON.stringify(user||null));
-    },
-    saveMeta(version,updatedAt){
-      this.version=Number(version)||0;this.updatedAt=Number(updatedAt)||0;
-      sessionStorage.setItem(SESSION_KEYS.version,String(this.version));
-      sessionStorage.setItem(SESSION_KEYS.updatedAt,String(this.updatedAt));
-    },
-    clearSession(){
-      this.token=null;this.user=null;this.version=0;this.updatedAt=0;this.loaded=false;this.conflict=false;
-      Object.values(SESSION_KEYS).forEach(k=>sessionStorage.removeItem(k));
-    },
-    async request(path,opt={}){
-      if(!API)throw new Error('MCloud API não configurada.');
-      const headers={'Content-Type':'application/json',...(opt.headers||{})};
-      if(this.token)headers.Authorization=`Bearer ${this.token}`;
-      const res=await fetch(API+path,{...opt,headers});
-      const body=await res.json().catch(()=>({}));
-      if(!res.ok){
-        const e=new Error(body.error||`Erro HTTP ${res.status}`);e.status=res.status;e.payload=body;
-        if(res.status===401&&!['/v1/auth/login','/v1/auth/register','/v1/auth/forgot-password','/v1/auth/reset-password'].includes(path)){
-          this.clearSession();erpStorage.setSyncEnabled(false);setStatus('error','Sessão expirada');openGate();
-        }
-        throw e;
-      }
-      return body;
-    },
-    async register(name,email,password){const r=await this.request('/v1/auth/register',{method:'POST',body:JSON.stringify({name,email,password})});this.saveSession(r.token,r.user);return r},
-    async login(email,password){const r=await this.request('/v1/auth/login',{method:'POST',body:JSON.stringify({email,password})});this.saveSession(r.token,r.user);return r},
-    async me(){const r=await this.request('/v1/auth/me');this.user=r.user;sessionStorage.setItem(SESSION_KEYS.user,JSON.stringify(r.user));return r.user},
-    async logout(){try{if(this.token)await this.request('/v1/auth/logout',{method:'POST'})}catch(e){}this.clearSession()},
-    async forgot(email){return this.request('/v1/auth/forgot-password',{method:'POST',body:JSON.stringify({email,appId:APP_ID})})},
-    async reset(token,newPassword){return this.request('/v1/auth/reset-password',{method:'POST',body:JSON.stringify({token,newPassword})})},
-    async changePassword(currentPassword,newPassword){return this.request('/v1/auth/change-password',{method:'POST',body:JSON.stringify({currentPassword,newPassword})})},
-    async pull(){return this.request(`/v1/apps/${encodeURIComponent(APP_ID)}/data`)},
-    async push({force=false,keepalive=false}={}){
-      if(!this.isLogged()||this.pushing||(this.conflict&&!force))return null;
-      this.pushing=true;setStatus('sync','Sincronizando...');
-      try{
-        const headers={'Content-Type':'application/json',Authorization:`Bearer ${this.token}`};
-        const res=await fetch(API+`/v1/apps/${encodeURIComponent(APP_ID)}/data`,{
-          method:'PUT',headers,body:JSON.stringify({data:cloudState(),expectedVersion:force?null:this.version}),keepalive
-        });
-        const body=await res.json().catch(()=>({}));
-        if(!res.ok){
-          if(res.status===409){
-            this.conflict=true;erpStorage.setSyncEnabled(false);setStatus('conflict','Conflito');
-            showMessage('erpAccountMessage','Os dados foram alterados em outro dispositivo. Escolha carregar a nuvem ou enviar este dispositivo.','warn');
-            const e=new Error(body.error||'Conflito de versão');e.status=409;e.payload=body;throw e;
-          }
-          throw new Error(body.error||`Erro HTTP ${res.status}`);
-        }
-        this.conflict=false;this.saveMeta(body.version,body.updatedAt);setStatus('ok','Sincronizado');updateAccountUI();return body;
-      }catch(e){if(e.status!==409){console.error('MCloud push:',e);setStatus('error','Erro na nuvem')}throw e}
-      finally{this.pushing=false}
-    },
-    schedulePush(){
-      if(!this.loaded||!this.isLogged()||this.conflict)return;
-      clearTimeout(this.pushTimer);
-      this.pushTimer=setTimeout(()=>this.push().catch(()=>{}),250);
-    },
-    async reserveSequence(name,count=20,minCurrent=0,companyId='default'){
-      return this.request(`/v1/apps/${encodeURIComponent(APP_ID)}/sequences/${encodeURIComponent(name)}/reserve`,{
-        method:'POST',body:JSON.stringify({count,minCurrent,companyId})
-      });
-    }
-  };
-  window.MCloud=CLOUD;
-
-  const SEQ={
-    blocks:{},refilling:{},
-    async reserve(name,count=20,minCurrent=0){
-      if(this.refilling[name])return this.refilling[name];
-      this.refilling[name]=(async()=>{
-        const r=await CLOUD.reserveSequence(name,count,minCurrent);
-        (this.blocks[name]||(this.blocks[name]=[])).push({next:Number(r.start),end:Number(r.end)});
-        return r;
-      })().finally(()=>delete this.refilling[name]);
-      return this.refilling[name];
-    },
-    async ensure(name,count=20,minCurrent=0){
-      const arr=this.blocks[name]||[];
-      const remaining=arr.reduce((s,b)=>s+Math.max(0,b.end-b.next+1),0);
-      if(remaining>0)return;
-      await this.reserve(name,count,minCurrent);
-    },
-    next(name){
-      const arr=this.blocks[name]||[];
-      while(arr.length&&arr[0].next>arr[0].end)arr.shift();
-      if(!arr.length)throw new Error('Bloco de sequência não disponível');
-      const n=arr[0].next++;
-      const remaining=arr.reduce((s,b)=>s+Math.max(0,b.end-b.next+1),0);
-      if(remaining<4&&!this.refilling[name])this.reserve(name,20,n).catch(e=>console.error('Pré-reserva da sequência:',e));
-      return n;
-    }
-  };
-  window.ERPSequence=SEQ;
-
-  function loadApp(){
-    if(appLoaded)return Promise.resolve();
-    return new Promise((resolve,reject)=>{
-      try{
-        const source=document.getElementById('gestaoerpAppEmbedded')?.textContent||'';
-        if(!source.trim())throw new Error('Código interno do GESTAOERP não encontrado.');
-        const sc=document.createElement('script');
-        sc.type='text/javascript';
-        sc.textContent=source;
-        document.body.appendChild(sc);
-        appLoaded=true;
-        resolve();
-      }catch(e){
-        reject(e);
-      }
-    });
-  }
-
-  async function bootstrapUser(){
-    setStatus('sync','Carregando...');
-    const remote=await CLOUD.pull();
-    const remoteKV=extractKV(remote?.data);
-    const legacy=legacySnapshot();
-    let migratedLegacy=false;
-
-    erpStorage.setSyncEnabled(false);
-    CLOUD.saveMeta(remote?.version||0,remote?.updatedAt||0);
-
-    if(hasKV(remoteKV)){
-      erpStorage.replaceManaged(remoteKV);
-    }else if(hasKV(legacy)&&confirm('Encontramos dados da versão antiga neste navegador. Deseja migrá-los agora para sua conta MCloud?')){
-      erpStorage.replaceManaged(legacy);migratedLegacy=true;
-    }else{
-      erpStorage.replaceManaged({});
-    }
-
-    await SEQ.ensure('id-lancamento',20,maxAccountingIdFromMemory());
-    showMessage('erpCloudMessage','Carregando o sistema...');
-    await loadApp();
-    CLOUD.loaded=true;erpStorage.setSyncEnabled(true);
-
-    // New account / empty app state: save the now-initialized ERP state (at least its sequence metadata).
-    if(!hasKV(remoteKV))await CLOUD.push({force:Number(remote?.version||0)===0});
-    if(migratedLegacy||hasKV(remoteKV))purgeLegacy();
-
-    clearMessage('erpCloudMessage');setStatus('ok','Sincronizado');closeGate();updateAccountUI();
-  }
-
-  function showAuthPane(name){
-    q('erpAuthLogin')?.classList.toggle('erp-cloud-hidden',name!=='login');
-    q('erpAuthRegister')?.classList.toggle('erp-cloud-hidden',name!=='register');
-    q('erpAuthForgot')?.classList.toggle('erp-cloud-hidden',name!=='forgot');
-    document.querySelectorAll('[data-authpane]').forEach(b=>b.classList.toggle('active',b.dataset.authpane===name));
-    clearMessage('erpCloudMessage');
-    if(name==='forgot'&&q('erpLoginEmail')?.value)q('erpForgotEmail').value=q('erpLoginEmail').value;
-  }
-  function updateAccountUI(){
-    if(!CLOUD.user)return;
-    q('erpAccountName').textContent=CLOUD.user.name||'Usuário';
-    q('erpAccountEmail').textContent=CLOUD.user.email||'';
-    q('erpAccountVersion').textContent='Versão '+(CLOUD.version||0)+(CLOUD.conflict?' · CONFLITO':'');
-  }
-
-  function exportBackup(){
-    const payload={format:'GESTAOERPBackup',backupVersion:1,appId:APP_ID,exportedAt:new Date().toISOString(),data:cloudState()};
-    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
-    const u=URL.createObjectURL(blob),a=document.createElement('a'),d=new Date(),pad=n=>String(n).padStart(2,'0');
-    a.href=u;a.download=`gestaoerp-backup-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
-    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1200);
-    showMessage('erpAccountMessage','Backup exportado. O arquivo contém somente os dados funcionais do ERP.','ok');
-  }
-  async function importBackup(file){
-    const parsed=JSON.parse(await file.text());
-    const kv=extractKV(parsed);
-    if(!hasKV(kv))throw new Error('Arquivo não reconhecido como backup do GESTAOERP.');
-    if(!confirm('Importar este backup e substituir os dados atuais desta conta?'))return;
-    erpStorage.setSyncEnabled(false);erpStorage.replaceManaged(kv);CLOUD.conflict=false;CLOUD.loaded=true;
-    await SEQ.ensure('id-lancamento',20,maxAccountingIdFromMemory());
-    erpStorage.setSyncEnabled(true);await CLOUD.push({force:true});
-    location.reload();
-  }
-
-  async function init(){
-    document.querySelectorAll('[data-authpane]').forEach(b=>b.onclick=()=>showAuthPane(b.dataset.authpane));
-    q('erpCloudStatus').onclick=openAccount;q('erpAccountClose').onclick=closeAccount;q('erpAccountClose2').onclick=closeAccount;
-
-    q('erpLoginBtn').onclick=async()=>{
-      const email=q('erpLoginEmail').value.trim(),password=q('erpLoginPassword').value;
-      if(!email||!password)return showMessage('erpCloudMessage','Informe e-mail e senha.','error');
-      const b=q('erpLoginBtn');b.disabled=true;showMessage('erpCloudMessage','Entrando...');
-      try{await CLOUD.login(email,password);await bootstrapUser()}catch(e){showMessage('erpCloudMessage',e.message||'Não foi possível entrar.','error')}finally{b.disabled=false}
-    };
-    q('erpRegisterBtn').onclick=async()=>{
-      const name=q('erpRegisterName').value.trim(),email=q('erpRegisterEmail').value.trim(),p=q('erpRegisterPassword').value,p2=q('erpRegisterPassword2').value;
-      if(!name||!email||!p)return showMessage('erpCloudMessage','Preencha nome, e-mail e senha.','error');
-      if(p.length<8)return showMessage('erpCloudMessage','A senha precisa ter pelo menos 8 caracteres.','error');
-      if(p!==p2)return showMessage('erpCloudMessage','As senhas não coincidem.','error');
-      const b=q('erpRegisterBtn');b.disabled=true;showMessage('erpCloudMessage','Criando conta...');
-      try{await CLOUD.register(name,email,p);await bootstrapUser()}catch(e){showMessage('erpCloudMessage',e.message||'Não foi possível criar a conta.','error')}finally{b.disabled=false}
-    };
-    q('erpForgotBtn').onclick=async()=>{
-      const email=q('erpForgotEmail').value.trim();if(!email)return showMessage('erpCloudMessage','Informe o e-mail.','error');
-      const b=q('erpForgotBtn');b.disabled=true;
-      try{await CLOUD.forgot(email);showMessage('erpCloudMessage','Se existir uma conta com esse e-mail, o link de recuperação foi enviado.','ok')}catch(e){showMessage('erpCloudMessage',e.message||'Não foi possível solicitar a recuperação.','error')}finally{b.disabled=false}
-    };
-
-    q('erpSyncNow').onclick=()=>CLOUD.push().then(()=>showMessage('erpAccountMessage','Dados sincronizados.','ok')).catch(e=>showMessage('erpAccountMessage',e.message,'error'));
-    q('erpPullCloud').onclick=()=>{if(confirm('Descartar alterações locais ainda não sincronizadas e carregar a versão da nuvem?'))location.reload()};
-    q('erpForceCloud').onclick=async()=>{if(!confirm('Enviar os dados deste dispositivo e substituir a versão atual da nuvem?'))return;try{CLOUD.conflict=false;erpStorage.setSyncEnabled(true);await CLOUD.push({force:true});showMessage('erpAccountMessage','Dados deste dispositivo enviados para a nuvem.','ok')}catch(e){showMessage('erpAccountMessage',e.message,'error')}};
-    q('erpExportBackup').onclick=exportBackup;q('erpImportBackup').onclick=()=>q('erpBackupFile').click();
-    q('erpBackupFile').onchange=e=>{const f=e.target.files?.[0];if(f)importBackup(f).catch(err=>showMessage('erpAccountMessage',err.message,'error')).finally(()=>e.target.value='')};
-    q('erpChangePassword').onclick=()=>q('erpPasswordBox').classList.remove('erp-cloud-hidden');q('erpPasswordCancel').onclick=()=>q('erpPasswordBox').classList.add('erp-cloud-hidden');
-    q('erpPasswordSave').onclick=async()=>{
-      const a=q('erpCurrentPassword').value,b=q('erpNewPassword').value,c=q('erpNewPassword2').value;
-      if(!a||!b||!c)return showMessage('erpAccountMessage','Preencha os campos de senha.','error');
-      if(b.length<8)return showMessage('erpAccountMessage','A nova senha precisa ter pelo menos 8 caracteres.','error');
-      if(b!==c)return showMessage('erpAccountMessage','As novas senhas não coincidem.','error');
-      try{await CLOUD.changePassword(a,b);q('erpPasswordBox').classList.add('erp-cloud-hidden');['erpCurrentPassword','erpNewPassword','erpNewPassword2'].forEach(id=>q(id).value='');showMessage('erpAccountMessage','Senha alterada com sucesso.','ok')}catch(e){showMessage('erpAccountMessage',e.message,'error')}
-    };
-    q('erpLogoutBtn').onclick=async()=>{
-      if(!confirm('Sair da sua conta MCloud?'))return;
-      try{if(CLOUD.loaded&&!CLOUD.conflict)await CLOUD.push()}catch(e){}
-      erpStorage.setSyncEnabled(false);await CLOUD.logout();erpStorage.clearManaged();location.reload();
-    };
-
-    const params=new URLSearchParams(location.search),resetToken=params.get('reset');
-    if(resetToken){
-      q('erpResetOverlay').classList.add('show');
-      q('erpResetCancel').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('reset');history.replaceState({},'',u.pathname+u.search+u.hash);q('erpResetOverlay').classList.remove('show')};
-      q('erpResetSave').onclick=async()=>{
-        const p=q('erpResetPassword').value,p2=q('erpResetPassword2').value;
-        if(p.length<8)return showMessage('erpResetMessage','A senha precisa ter pelo menos 8 caracteres.','error');
-        if(p!==p2)return showMessage('erpResetMessage','As senhas não coincidem.','error');
-        try{await CLOUD.reset(resetToken,p);showMessage('erpResetMessage','Senha redefinida. Agora entre com a nova senha.','ok');const u=new URL(location.href);u.searchParams.delete('reset');history.replaceState({},'',u.pathname+u.search+u.hash);setTimeout(()=>{q('erpResetOverlay').classList.remove('show');showAuthPane('login')},900)}catch(e){showMessage('erpResetMessage',e.message,'error')}
-      };
-    }
-
-    if(!API||API.includes('COLE_AQUI')){setStatus('error','Configurar API');showMessage('erpCloudMessage','Configure o endereço da API em mcloud-config.js.','error');openGate();return}
-    CLOUD.initSession();
-    if(CLOUD.isLogged()){
-      try{await CLOUD.me();await bootstrapUser()}
-      catch(e){console.error(e);CLOUD.clearSession();erpStorage.setSyncEnabled(false);setStatus('error','Entrar');openGate();showMessage('erpCloudMessage','Sua sessão expirou ou o MCloud não pôde ser carregado. Entre novamente.','warn')}
-    }else{setStatus('sync','Entrar');openGate()}
-
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&CLOUD.loaded&&!CLOUD.conflict)CLOUD.push({keepalive:true}).catch(()=>{})});
-  }
-
-  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
-})();
-
-</script>
 
 
-
-
-<script id="cash-accounts-v39">
+// ===== v41: Contas/Caixa integrado ao ERP =====
 (function(){
   'use strict';
 
@@ -4721,10 +4354,8 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
     return prevOpen(label);
   };
 })();
-</script>
 
-
-<script id="financial-settlement-v40">
+// ===== v41: Baixa Financeira integrada ao ERP =====
 (function(){
 'use strict';
 const TM_KEY='rm_tipos_movimento_v1';
@@ -4844,6 +4475,410 @@ function boot40(){installTMUI();installCashNature();installFinancialProcess()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot40,{once:true});else boot40();
 })();
 </script>
+<script>
+// GESTAOERP v22 - MCloud client (Cloudflare Worker + D1)
+// No database password or administrative API secret belongs in this file.
+(function(){
+  'use strict';
+
+  const CFG=window.MCLOUD_CONFIG||{};
+  const API=String(CFG.apiBase||'').replace(/\/$/,'');
+  const APP_ID=String(CFG.appId||'gestaoerp').trim()||'gestaoerp';
+  const APP_SCRIPT=String(CFG.appScript||'./gestaoerp-app.js');
+  const SESSION_KEYS={
+    token:'gestaoerp_mcloud_token',
+    user:'gestaoerp_mcloud_user',
+    version:'gestaoerp_mcloud_version',
+    updatedAt:'gestaoerp_mcloud_updatedAt'
+  };
+  const LOCAL_ONLY_KEYS=new Set(['rm_modulo_atual_v11']);
+  const DATA_KEYS=new Set([
+    'rm_plano_contas_contabil_v3',
+    'rm_plano_contas_meta_v3',
+    'rm_centros_custos_v1',
+    'rm_classificacao_centros_custos_v1',
+    'rm_historicos_padroes_v1',
+    'rm_lotes_v1',
+    'rm_lancamentos_contabeis_v1',
+    'rm_lancamentos_contabeis_seq_v1',
+    'rm_lancamentos_periodicos_v1',
+    'rm_meios_pagamento_v9',
+    'rm_naturezas_orc_v9',
+    'rm_produtos_v9',
+    'rm_clientes_fornecedores_v9',
+    'rm_tipos_movimento_v1',
+    'rm_movimentos_v12',
+    'rm_lancamentos_financeiros_v12',
+    'rm_condicoes_pagamento_v15'
+  ]);
+
+  const q=id=>document.getElementById(id);
+  const nativeLocal=window.localStorage;
+  let memory=Object.create(null);
+  let syncEnabled=false;
+  let appLoaded=false;
+
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  const isManaged=k=>DATA_KEYS.has(String(k||''))&&!LOCAL_ONLY_KEYS.has(String(k||''));
+
+  window.erpStorage={
+    getItem(k){
+      k=String(k);
+      if(isManaged(k))return Object.prototype.hasOwnProperty.call(memory,k)?memory[k]:null;
+      try{return nativeLocal.getItem(k)}catch(e){return null}
+    },
+    setItem(k,v){
+      k=String(k);
+      if(isManaged(k)){
+        memory[k]=String(v);
+        if(syncEnabled)window.MCloud?.schedulePush?.();
+        return;
+      }
+      try{nativeLocal.setItem(k,String(v))}catch(e){}
+    },
+    removeItem(k){
+      k=String(k);
+      if(isManaged(k)){
+        delete memory[k];
+        if(syncEnabled)window.MCloud?.schedulePush?.();
+        return;
+      }
+      try{nativeLocal.removeItem(k)}catch(e){}
+    },
+    setManagedSilent(k,v){k=String(k);if(isManaged(k))memory[k]=String(v)},
+    replaceManaged(kv){
+      memory=Object.create(null);
+      for(const [k,v] of Object.entries(kv||{}))if(isManaged(k))memory[k]=String(v);
+    },
+    exportManaged(){return clone(memory)},
+    setSyncEnabled(v){syncEnabled=!!v},
+    clearManaged(){memory=Object.create(null)},
+    dataKeys(){return [...DATA_KEYS]}
+  };
+
+  function legacySnapshot(){
+    const out={};
+    for(const k of DATA_KEYS){
+      try{const v=nativeLocal.getItem(k);if(v!==null)out[k]=v}catch(e){}
+    }
+    return out;
+  }
+  function purgeLegacy(){for(const k of DATA_KEYS){try{nativeLocal.removeItem(k)}catch(e){}}}
+  function hasKV(kv){return Object.keys(kv||{}).some(k=>DATA_KEYS.has(k))}
+  function cloudState(){return{format:'GESTAOERPCloudState',schemaVersion:1,appId:APP_ID,kv:erpStorage.exportManaged()}}
+  function extractKV(data){
+    if(!data||typeof data!=='object')return{};
+    if(data.format==='GESTAOERPCloudState'&&data.kv&&typeof data.kv==='object')return data.kv;
+    if(data.format==='GESTAOERPBackup'&&data.data?.kv)return data.data.kv;
+    if(data.data?.format==='GESTAOERPCloudState'&&data.data.kv)return data.data.kv;
+    if(Object.keys(data).some(k=>DATA_KEYS.has(k)))return data;
+    return{};
+  }
+  function normalizeAccountingIdsInMemory(){
+    try{
+      const key='rm_lancamentos_contabeis_v1',seqKey='rm_lancamentos_contabeis_seq_v1';
+      const a=JSON.parse(erpStorage.getItem(key)||'[]');
+      if(!Array.isArray(a)){erpStorage.setManagedSilent(seqKey,'0');return 0}
+      let seq=Math.max(0,...a.map(x=>Number(x.idNumber)||0));
+      const used=new Set();let changed=false;
+      for(const e of a){
+        let n=Number(e.idNumber)||0;
+        if(n<=0||used.has(n)){n=++seq;e.idNumber=n;changed=true}
+        used.add(n);if(n>seq)seq=n;
+      }
+      if(changed)erpStorage.setManagedSilent(key,JSON.stringify(a));
+      erpStorage.setManagedSilent(seqKey,String(seq));
+      return seq;
+    }catch(e){erpStorage.setManagedSilent('rm_lancamentos_contabeis_seq_v1','0');return 0}
+  }
+  function maxAccountingIdFromMemory(){return normalizeAccountingIdsInMemory()}
+
+  function setStatus(mode,text){
+    const e=q('erpCloudStatus'),t=q('erpCloudStatusText');
+    if(!e||!t)return;
+    e.classList.remove('ok','error','sync','conflict');
+    e.classList.add(mode||'sync');
+    t.textContent=text||'MCloud';
+  }
+  function showMessage(id,text,type=''){
+    const e=q(id);if(!e)return;
+    e.textContent=text;
+    e.className='erp-cloud-msg show'+(type?' '+type:'');
+  }
+  function clearMessage(id){const e=q(id);if(e)e.className='erp-cloud-msg'}
+  function openGate(){const e=q('erpCloudGate');if(e)e.style.display='flex'}
+  function closeGate(){const e=q('erpCloudGate');if(e)e.style.display='none'}
+  function openAccount(){if(!CLOUD.isLogged()){openGate();return}updateAccountUI();q('erpAccountOverlay')?.classList.add('show')}
+  function closeAccount(){q('erpAccountOverlay')?.classList.remove('show')}
+
+  const CLOUD={
+    token:null,user:null,version:0,updatedAt:0,pushTimer:null,pushing:false,conflict:false,loaded:false,
+    initSession(){
+      this.token=sessionStorage.getItem(SESSION_KEYS.token)||null;
+      try{this.user=JSON.parse(sessionStorage.getItem(SESSION_KEYS.user)||'null')}catch(e){this.user=null}
+      this.version=Number(sessionStorage.getItem(SESSION_KEYS.version)||0)||0;
+      this.updatedAt=Number(sessionStorage.getItem(SESSION_KEYS.updatedAt)||0)||0;
+    },
+    isLogged(){return!!this.token},
+    saveSession(token,user){
+      this.token=token;this.user=user||null;
+      sessionStorage.setItem(SESSION_KEYS.token,token);
+      sessionStorage.setItem(SESSION_KEYS.user,JSON.stringify(user||null));
+    },
+    saveMeta(version,updatedAt){
+      this.version=Number(version)||0;this.updatedAt=Number(updatedAt)||0;
+      sessionStorage.setItem(SESSION_KEYS.version,String(this.version));
+      sessionStorage.setItem(SESSION_KEYS.updatedAt,String(this.updatedAt));
+    },
+    clearSession(){
+      this.token=null;this.user=null;this.version=0;this.updatedAt=0;this.loaded=false;this.conflict=false;
+      Object.values(SESSION_KEYS).forEach(k=>sessionStorage.removeItem(k));
+    },
+    async request(path,opt={}){
+      if(!API)throw new Error('MCloud API não configurada.');
+      const headers={'Content-Type':'application/json',...(opt.headers||{})};
+      if(this.token)headers.Authorization=`Bearer ${this.token}`;
+      const res=await fetch(API+path,{...opt,headers});
+      const body=await res.json().catch(()=>({}));
+      if(!res.ok){
+        const e=new Error(body.error||`Erro HTTP ${res.status}`);e.status=res.status;e.payload=body;
+        if(res.status===401&&!['/v1/auth/login','/v1/auth/register','/v1/auth/forgot-password','/v1/auth/reset-password'].includes(path)){
+          this.clearSession();erpStorage.setSyncEnabled(false);setStatus('error','Sessão expirada');openGate();
+        }
+        throw e;
+      }
+      return body;
+    },
+    async register(name,email,password){const r=await this.request('/v1/auth/register',{method:'POST',body:JSON.stringify({name,email,password})});this.saveSession(r.token,r.user);return r},
+    async login(email,password){const r=await this.request('/v1/auth/login',{method:'POST',body:JSON.stringify({email,password})});this.saveSession(r.token,r.user);return r},
+    async me(){const r=await this.request('/v1/auth/me');this.user=r.user;sessionStorage.setItem(SESSION_KEYS.user,JSON.stringify(r.user));return r.user},
+    async logout(){try{if(this.token)await this.request('/v1/auth/logout',{method:'POST'})}catch(e){}this.clearSession()},
+    async forgot(email){return this.request('/v1/auth/forgot-password',{method:'POST',body:JSON.stringify({email,appId:APP_ID})})},
+    async reset(token,newPassword){return this.request('/v1/auth/reset-password',{method:'POST',body:JSON.stringify({token,newPassword})})},
+    async changePassword(currentPassword,newPassword){return this.request('/v1/auth/change-password',{method:'POST',body:JSON.stringify({currentPassword,newPassword})})},
+    async pull(){return this.request(`/v1/apps/${encodeURIComponent(APP_ID)}/data`)},
+    async push({force=false,keepalive=false}={}){
+      if(!this.isLogged()||this.pushing||(this.conflict&&!force))return null;
+      this.pushing=true;setStatus('sync','Sincronizando...');
+      try{
+        const headers={'Content-Type':'application/json',Authorization:`Bearer ${this.token}`};
+        const res=await fetch(API+`/v1/apps/${encodeURIComponent(APP_ID)}/data`,{
+          method:'PUT',headers,body:JSON.stringify({data:cloudState(),expectedVersion:force?null:this.version}),keepalive
+        });
+        const body=await res.json().catch(()=>({}));
+        if(!res.ok){
+          if(res.status===409){
+            this.conflict=true;erpStorage.setSyncEnabled(false);setStatus('conflict','Conflito');
+            showMessage('erpAccountMessage','Os dados foram alterados em outro dispositivo. Escolha carregar a nuvem ou enviar este dispositivo.','warn');
+            const e=new Error(body.error||'Conflito de versão');e.status=409;e.payload=body;throw e;
+          }
+          throw new Error(body.error||`Erro HTTP ${res.status}`);
+        }
+        this.conflict=false;this.saveMeta(body.version,body.updatedAt);setStatus('ok','Sincronizado');updateAccountUI();return body;
+      }catch(e){if(e.status!==409){console.error('MCloud push:',e);setStatus('error','Erro na nuvem')}throw e}
+      finally{this.pushing=false}
+    },
+    schedulePush(){
+      if(!this.loaded||!this.isLogged()||this.conflict)return;
+      clearTimeout(this.pushTimer);
+      this.pushTimer=setTimeout(()=>this.push().catch(()=>{}),250);
+    },
+    async reserveSequence(name,count=20,minCurrent=0,companyId='default'){
+      return this.request(`/v1/apps/${encodeURIComponent(APP_ID)}/sequences/${encodeURIComponent(name)}/reserve`,{
+        method:'POST',body:JSON.stringify({count,minCurrent,companyId})
+      });
+    }
+  };
+  window.MCloud=CLOUD;
+
+  const SEQ={
+    blocks:{},refilling:{},
+    async reserve(name,count=20,minCurrent=0){
+      if(this.refilling[name])return this.refilling[name];
+      this.refilling[name]=(async()=>{
+        const r=await CLOUD.reserveSequence(name,count,minCurrent);
+        (this.blocks[name]||(this.blocks[name]=[])).push({next:Number(r.start),end:Number(r.end)});
+        return r;
+      })().finally(()=>delete this.refilling[name]);
+      return this.refilling[name];
+    },
+    async ensure(name,count=20,minCurrent=0){
+      const arr=this.blocks[name]||[];
+      const remaining=arr.reduce((s,b)=>s+Math.max(0,b.end-b.next+1),0);
+      if(remaining>0)return;
+      await this.reserve(name,count,minCurrent);
+    },
+    next(name){
+      const arr=this.blocks[name]||[];
+      while(arr.length&&arr[0].next>arr[0].end)arr.shift();
+      if(!arr.length)throw new Error('Bloco de sequência não disponível');
+      const n=arr[0].next++;
+      const remaining=arr.reduce((s,b)=>s+Math.max(0,b.end-b.next+1),0);
+      if(remaining<4&&!this.refilling[name])this.reserve(name,20,n).catch(e=>console.error('Pré-reserva da sequência:',e));
+      return n;
+    }
+  };
+  window.ERPSequence=SEQ;
+
+  function loadApp(){
+    if(appLoaded)return Promise.resolve();
+    return new Promise((resolve,reject)=>{
+      try{
+        const source=document.getElementById('gestaoerpAppEmbedded')?.textContent||'';
+        if(!source.trim())throw new Error('Código interno do GESTAOERP não encontrado.');
+        const sc=document.createElement('script');
+        sc.type='text/javascript';
+        sc.textContent=source;
+        document.body.appendChild(sc);
+        appLoaded=true;
+        resolve();
+      }catch(e){
+        reject(e);
+      }
+    });
+  }
+
+  async function bootstrapUser(){
+    setStatus('sync','Carregando...');
+    const remote=await CLOUD.pull();
+    const remoteKV=extractKV(remote?.data);
+    const legacy=legacySnapshot();
+    let migratedLegacy=false;
+
+    erpStorage.setSyncEnabled(false);
+    CLOUD.saveMeta(remote?.version||0,remote?.updatedAt||0);
+
+    if(hasKV(remoteKV)){
+      erpStorage.replaceManaged(remoteKV);
+    }else if(hasKV(legacy)&&confirm('Encontramos dados da versão antiga neste navegador. Deseja migrá-los agora para sua conta MCloud?')){
+      erpStorage.replaceManaged(legacy);migratedLegacy=true;
+    }else{
+      erpStorage.replaceManaged({});
+    }
+
+    await SEQ.ensure('id-lancamento',20,maxAccountingIdFromMemory());
+    showMessage('erpCloudMessage','Carregando o sistema...');
+    await loadApp();
+    CLOUD.loaded=true;erpStorage.setSyncEnabled(true);
+
+    // New account / empty app state: save the now-initialized ERP state (at least its sequence metadata).
+    if(!hasKV(remoteKV))await CLOUD.push({force:Number(remote?.version||0)===0});
+    if(migratedLegacy||hasKV(remoteKV))purgeLegacy();
+
+    clearMessage('erpCloudMessage');setStatus('ok','Sincronizado');closeGate();updateAccountUI();
+  }
+
+  function showAuthPane(name){
+    q('erpAuthLogin')?.classList.toggle('erp-cloud-hidden',name!=='login');
+    q('erpAuthRegister')?.classList.toggle('erp-cloud-hidden',name!=='register');
+    q('erpAuthForgot')?.classList.toggle('erp-cloud-hidden',name!=='forgot');
+    document.querySelectorAll('[data-authpane]').forEach(b=>b.classList.toggle('active',b.dataset.authpane===name));
+    clearMessage('erpCloudMessage');
+    if(name==='forgot'&&q('erpLoginEmail')?.value)q('erpForgotEmail').value=q('erpLoginEmail').value;
+  }
+  function updateAccountUI(){
+    if(!CLOUD.user)return;
+    q('erpAccountName').textContent=CLOUD.user.name||'Usuário';
+    q('erpAccountEmail').textContent=CLOUD.user.email||'';
+    q('erpAccountVersion').textContent='Versão '+(CLOUD.version||0)+(CLOUD.conflict?' · CONFLITO':'');
+  }
+
+  function exportBackup(){
+    const payload={format:'GESTAOERPBackup',backupVersion:1,appId:APP_ID,exportedAt:new Date().toISOString(),data:cloudState()};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+    const u=URL.createObjectURL(blob),a=document.createElement('a'),d=new Date(),pad=n=>String(n).padStart(2,'0');
+    a.href=u;a.download=`gestaoerp-backup-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.json`;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1200);
+    showMessage('erpAccountMessage','Backup exportado. O arquivo contém somente os dados funcionais do ERP.','ok');
+  }
+  async function importBackup(file){
+    const parsed=JSON.parse(await file.text());
+    const kv=extractKV(parsed);
+    if(!hasKV(kv))throw new Error('Arquivo não reconhecido como backup do GESTAOERP.');
+    if(!confirm('Importar este backup e substituir os dados atuais desta conta?'))return;
+    erpStorage.setSyncEnabled(false);erpStorage.replaceManaged(kv);CLOUD.conflict=false;CLOUD.loaded=true;
+    await SEQ.ensure('id-lancamento',20,maxAccountingIdFromMemory());
+    erpStorage.setSyncEnabled(true);await CLOUD.push({force:true});
+    location.reload();
+  }
+
+  async function init(){
+    document.querySelectorAll('[data-authpane]').forEach(b=>b.onclick=()=>showAuthPane(b.dataset.authpane));
+    q('erpCloudStatus').onclick=openAccount;q('erpAccountClose').onclick=closeAccount;q('erpAccountClose2').onclick=closeAccount;
+
+    q('erpLoginBtn').onclick=async()=>{
+      const email=q('erpLoginEmail').value.trim(),password=q('erpLoginPassword').value;
+      if(!email||!password)return showMessage('erpCloudMessage','Informe e-mail e senha.','error');
+      const b=q('erpLoginBtn');b.disabled=true;showMessage('erpCloudMessage','Entrando...');
+      try{await CLOUD.login(email,password);await bootstrapUser()}catch(e){showMessage('erpCloudMessage',e.message||'Não foi possível entrar.','error')}finally{b.disabled=false}
+    };
+    q('erpRegisterBtn').onclick=async()=>{
+      const name=q('erpRegisterName').value.trim(),email=q('erpRegisterEmail').value.trim(),p=q('erpRegisterPassword').value,p2=q('erpRegisterPassword2').value;
+      if(!name||!email||!p)return showMessage('erpCloudMessage','Preencha nome, e-mail e senha.','error');
+      if(p.length<8)return showMessage('erpCloudMessage','A senha precisa ter pelo menos 8 caracteres.','error');
+      if(p!==p2)return showMessage('erpCloudMessage','As senhas não coincidem.','error');
+      const b=q('erpRegisterBtn');b.disabled=true;showMessage('erpCloudMessage','Criando conta...');
+      try{await CLOUD.register(name,email,p);await bootstrapUser()}catch(e){showMessage('erpCloudMessage',e.message||'Não foi possível criar a conta.','error')}finally{b.disabled=false}
+    };
+    q('erpForgotBtn').onclick=async()=>{
+      const email=q('erpForgotEmail').value.trim();if(!email)return showMessage('erpCloudMessage','Informe o e-mail.','error');
+      const b=q('erpForgotBtn');b.disabled=true;
+      try{await CLOUD.forgot(email);showMessage('erpCloudMessage','Se existir uma conta com esse e-mail, o link de recuperação foi enviado.','ok')}catch(e){showMessage('erpCloudMessage',e.message||'Não foi possível solicitar a recuperação.','error')}finally{b.disabled=false}
+    };
+
+    q('erpSyncNow').onclick=()=>CLOUD.push().then(()=>showMessage('erpAccountMessage','Dados sincronizados.','ok')).catch(e=>showMessage('erpAccountMessage',e.message,'error'));
+    q('erpPullCloud').onclick=()=>{if(confirm('Descartar alterações locais ainda não sincronizadas e carregar a versão da nuvem?'))location.reload()};
+    q('erpForceCloud').onclick=async()=>{if(!confirm('Enviar os dados deste dispositivo e substituir a versão atual da nuvem?'))return;try{CLOUD.conflict=false;erpStorage.setSyncEnabled(true);await CLOUD.push({force:true});showMessage('erpAccountMessage','Dados deste dispositivo enviados para a nuvem.','ok')}catch(e){showMessage('erpAccountMessage',e.message,'error')}};
+    q('erpExportBackup').onclick=exportBackup;q('erpImportBackup').onclick=()=>q('erpBackupFile').click();
+    q('erpBackupFile').onchange=e=>{const f=e.target.files?.[0];if(f)importBackup(f).catch(err=>showMessage('erpAccountMessage',err.message,'error')).finally(()=>e.target.value='')};
+    q('erpChangePassword').onclick=()=>q('erpPasswordBox').classList.remove('erp-cloud-hidden');q('erpPasswordCancel').onclick=()=>q('erpPasswordBox').classList.add('erp-cloud-hidden');
+    q('erpPasswordSave').onclick=async()=>{
+      const a=q('erpCurrentPassword').value,b=q('erpNewPassword').value,c=q('erpNewPassword2').value;
+      if(!a||!b||!c)return showMessage('erpAccountMessage','Preencha os campos de senha.','error');
+      if(b.length<8)return showMessage('erpAccountMessage','A nova senha precisa ter pelo menos 8 caracteres.','error');
+      if(b!==c)return showMessage('erpAccountMessage','As novas senhas não coincidem.','error');
+      try{await CLOUD.changePassword(a,b);q('erpPasswordBox').classList.add('erp-cloud-hidden');['erpCurrentPassword','erpNewPassword','erpNewPassword2'].forEach(id=>q(id).value='');showMessage('erpAccountMessage','Senha alterada com sucesso.','ok')}catch(e){showMessage('erpAccountMessage',e.message,'error')}
+    };
+    q('erpLogoutBtn').onclick=async()=>{
+      if(!confirm('Sair da sua conta MCloud?'))return;
+      try{if(CLOUD.loaded&&!CLOUD.conflict)await CLOUD.push()}catch(e){}
+      erpStorage.setSyncEnabled(false);await CLOUD.logout();erpStorage.clearManaged();location.reload();
+    };
+
+    const params=new URLSearchParams(location.search),resetToken=params.get('reset');
+    if(resetToken){
+      q('erpResetOverlay').classList.add('show');
+      q('erpResetCancel').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('reset');history.replaceState({},'',u.pathname+u.search+u.hash);q('erpResetOverlay').classList.remove('show')};
+      q('erpResetSave').onclick=async()=>{
+        const p=q('erpResetPassword').value,p2=q('erpResetPassword2').value;
+        if(p.length<8)return showMessage('erpResetMessage','A senha precisa ter pelo menos 8 caracteres.','error');
+        if(p!==p2)return showMessage('erpResetMessage','As senhas não coincidem.','error');
+        try{await CLOUD.reset(resetToken,p);showMessage('erpResetMessage','Senha redefinida. Agora entre com a nova senha.','ok');const u=new URL(location.href);u.searchParams.delete('reset');history.replaceState({},'',u.pathname+u.search+u.hash);setTimeout(()=>{q('erpResetOverlay').classList.remove('show');showAuthPane('login')},900)}catch(e){showMessage('erpResetMessage',e.message,'error')}
+      };
+    }
+
+    if(!API||API.includes('COLE_AQUI')){setStatus('error','Configurar API');showMessage('erpCloudMessage','Configure o endereço da API em mcloud-config.js.','error');openGate();return}
+    CLOUD.initSession();
+    if(CLOUD.isLogged()){
+      try{await CLOUD.me();await bootstrapUser()}
+      catch(e){console.error(e);CLOUD.clearSession();erpStorage.setSyncEnabled(false);setStatus('error','Entrar');openGate();showMessage('erpCloudMessage','Sua sessão expirou ou o MCloud não pôde ser carregado. Entre novamente.','warn')}
+    }else{setStatus('sync','Entrar');openGate()}
+
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&CLOUD.loaded&&!CLOUD.conflict)CLOUD.push({keepalive:true}).catch(()=>{})});
+  }
+
+  if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+</script>
+
+
+
+
+
+
+
+
 
 <script id="erp-window-manager-v38">
 (function(){
