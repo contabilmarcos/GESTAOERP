@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v43 - Conta/Caixa selecionável no Movimento -->
+<!-- GESTAOERP MCloud v44 - Default de Baixa integrado ao save do Tipo Movimento -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -3476,7 +3476,25 @@ function doSave(closeAfter=false){
   if(tmItems.some(x=>String(x.number).toLowerCase()===number.toLowerCase()&&x.id!==tmEdit))return alert('Já existe um Tipo de Movimento com essa numeração.');
   let x=tmEdit?tmItems.find(a=>a.id===tmEdit):null;
   if(!x){x={id:rmUid()};tmItems.push(x)}
-  Object.assign(x,{number,name,lotId:Number(lotId),defaults:JSON.parse(JSON.stringify(tmDraftDefaults||{debit:[],credit:[]}))});tmSel=x.id;tmEdit=x.id;save();render();showToast('Tipo de Movimento salvo');if(closeAfter)close();
+  const stored=rmLoad(TM_KEY,[]).find(a=>String(a.id)===String(x.id))||{};
+  const extra=(typeof window.__getTMSettlementExtras==='function')
+    ? window.__getTMSettlementExtras()
+    : {};
+
+  Object.assign(x,{
+    number,
+    name,
+    lotId:Number(lotId),
+    defaults:JSON.parse(JSON.stringify(tmDraftDefaults||{debit:[],credit:[]})),
+    settlementLotId:Object.prototype.hasOwnProperty.call(extra,'settlementLotId')
+      ? extra.settlementLotId
+      : (stored.settlementLotId??null),
+    settlementDefaults:Object.prototype.hasOwnProperty.call(extra,'settlementDefaults')
+      ? JSON.parse(JSON.stringify(extra.settlementDefaults||{debit:[]}))
+      : JSON.parse(JSON.stringify(stored.settlementDefaults||{debit:[]}))
+  });
+
+  tmSel=x.id;tmEdit=x.id;save();render();showToast('Tipo de Movimento salvo');if(closeAfter)close();
 }
 function tmDefRender(){const d=tmDraftDefaults||{debit:[],credit:[]};for(const side of ['debit','credit']){const rows=d[side]||[],body=q(side==='debit'?'tmDefDebitBody':'tmDefCreditBody');body.innerHTML=rows.length?rows.map((r,i)=>`<tr data-i="${i}" class="${tmDefSelection[side]===i?'selected':''}"><td>${esc(r.account||'')}</td><td>${esc(r.accountDesc||'')}</td><td>${Number(r.percent||0).toLocaleString('pt-BR',{minimumFractionDigits:4})}</td><td>${esc(r.branch||'')}</td><td>${esc(r.dept||'')}</td><td>${esc(r.cost||'')}</td><td>${esc(r.history||'')}</td><td>${esc(r.complement||'')}</td></tr>`).join(''):'<tr><td colspan="8">&nbsp;</td></tr>';body.querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>{tmDefSelection[side]=Number(tr.dataset.i);tmDefRender()})}const dv=(d.debit||[]).reduce((a,r)=>a+Number(r.percent||0),0),cv=(d.credit||[]).reduce((a,r)=>a+Number(r.percent||0),0);q('tmDefDebitTotal').textContent=dv.toLocaleString('pt-BR',{minimumFractionDigits:2});q('tmDefCreditTotal').textContent=cv.toLocaleString('pt-BR',{minimumFractionDigits:2});const diff=dv-cv;q('tmDefDiff').textContent=diff.toLocaleString('pt-BR',{minimumFractionDigits:2});q('tmDefDiff').className=Math.abs(diff)<.0001?'v9-good':'v9-bad'}
 function tmDefOpen(){if(typeof refreshLists==='function')refreshLists();tmDefRender();q('tmDefModal').classList.add('show')}
@@ -4587,6 +4605,17 @@ const entries40=()=>rmLoad(ENTRY_KEY,[]);
 
 /* ---------------- TIPO MOVIMENTO ---------------- */
 let lowDraft=[],lowSel=-1,lowEdit=-1,currentTMId=null;
+
+// O cadastro principal do Tipo de Movimento usa esta função para salvar
+// Lote de Baixa + Default de Baixa no MESMO registro.
+window.__getTMSettlementExtras=function(){
+  const lotValue=q('tmSettlementLot')?.value||'';
+  return {
+    settlementLotId: lotValue ? Number(lotValue) : null,
+    settlementDefaults: { debit: clone(lowDraft||[]) }
+  };
+};
+
 function installTMUI(){
   const modal=q('tmModal'); if(!modal||q('tmSettlementLot'))return;
   const grid=modal.querySelector('.v9-form-grid');
@@ -4641,8 +4670,44 @@ function installTMUI(){
 }
 function fillLowLots(){const sel=q('tmSettlementLot');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione o lote de baixa...</option>'+lots40().map(l=>`<option value="${l.id}">${esc40(l.code)} - ${esc40(l.description)}</option>`).join('');if([...sel.options].some(o=>o.value===String(cur)))sel.value=String(cur)}
 function currentTMRecord(){const code=q('tmNumber')?.value.trim();return types40().find(x=>String(x.number)===String(code))||null}
-function loadTMExtras(){fillLowLots();const r=currentTMRecord();currentTMId=r?.id||null;q('tmSettlementLot').value=r?.settlementLotId?String(r.settlementLotId):'';lowDraft=clone(r?.settlementDefaults?.debit||[]);lowSel=-1;augmentTMGrid()}
-function persistTMExtras(){const code=q('tmNumber')?.value.trim();if(!code)return;const arr=types40();const r=arr.find(x=>String(x.number)===String(code));if(!r)return;r.settlementLotId=q('tmSettlementLot')?.value?Number(q('tmSettlementLot').value):null;r.settlementDefaults={debit:clone(lowDraft)};rmSave(TM_KEY,arr);currentTMId=r.id;augmentTMGrid()}
+function loadTMExtras(){
+  fillLowLots();
+  const r=currentTMRecord();
+  currentTMId=r?.id||null;
+  q('tmSettlementLot').value=r?.settlementLotId?String(r.settlementLotId):'';
+  lowDraft=clone(r?.settlementDefaults?.debit||[]);
+  lowSel=-1;
+  augmentTMGrid();
+}
+function persistTMExtras(){
+  const code=q('tmNumber')?.value.trim();
+  if(!code)return;
+
+  const settlementLotId=q('tmSettlementLot')?.value?Number(q('tmSettlementLot').value):null;
+  const settlementDefaults={debit:clone(lowDraft)};
+
+  const arr=types40();
+  const r=arr.find(x=>String(x.number)===String(code));
+  if(!r)return;
+
+  r.settlementLotId=settlementLotId;
+  r.settlementDefaults=settlementDefaults;
+  rmSave(TM_KEY,arr);
+
+  // Sincroniza também a cópia em memória mantida pelo módulo Tipo Movimento.
+  try{
+    if(typeof tmItems!=='undefined'){
+      const mem=tmItems.find(x=>String(x.id)===String(r.id));
+      if(mem){
+        mem.settlementLotId=settlementLotId;
+        mem.settlementDefaults=clone(settlementDefaults);
+      }
+    }
+  }catch(e){}
+
+  currentTMId=r.id;
+  augmentTMGrid();
+}
 function renderLow(){const body=q('tmLowBody');if(!body)return;body.innerHTML=lowDraft.length?lowDraft.map((r,i)=>`<tr data-i="${i}" class="${i===lowSel?'selected':''}"><td>${esc40(r.account||'')}</td><td>${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR',{minimumFractionDigits:4})}</td><td>${esc40(r.branch||'')}</td><td>${esc40(r.dept||'')}</td><td>${esc40(r.cost||'')}</td><td>${esc40(r.history||'')}</td><td>${esc40(r.complement||'')}</td></tr>`).join(''):'<tr><td colspan="8" style="padding:20px;color:#718497">Nenhum Default de Baixa cadastrado.</td></tr>';body.querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>{lowSel=Number(tr.dataset.i);renderLow()});q('tmLowTotal').textContent=lowDraft.reduce((s,r)=>s+Number(r.percent??100),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
 function openLowDefaults(){loadTMExtras();renderLow();q('tmLowModal').classList.add('show')}
 function openLowEditor(i){lowEdit=i;const r=i>=0?lowDraft[i]:{};q('tmLowAccount').value=r.account||'';q('tmLowBranch').value=r.branch||'';q('tmLowDept').value=r.dept||'';q('tmLowCost').value=r.cost||'';q('tmLowHist').value=r.history||'';q('tmLowComp').value=r.complement||'';q('tmLowPercent').value=r.percent??100;lowAutofill();q('tmLowEditModal').classList.add('show')}
@@ -4670,7 +4735,10 @@ function selectedFinancial(){const tr=q('finBody')?.querySelector('tr.selected[d
 function settlementType(fin){let typeId=fin?.movementTypeId; if(!typeId&&fin?.movementId){const m=movs40().find(x=>String(x.id)===String(fin.movementId));typeId=m?.typeId}return types40().find(t=>String(t.id)===String(typeId))||null}
 function settlementCashOptions(){const sel=q('finSettleCash');sel.innerHTML='<option value="">Selecione...</option>'+cash40().filter(c=>c.active!==false).map(c=>`<option value="${esc40(c.id)}">${esc40(c.code)} - ${esc40(c.description)}</option>`).join('')}
 function openSettlement(){const fin=selectedFinancial();if(!fin)return alert('Selecione um lançamento financeiro.');const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(open<=.005)return alert('Este lançamento já está totalmente baixado.');const t=settlementType(fin);if(!t)return alert('O lançamento selecionado não possui Tipo de Movimento de origem.');settleFinId=fin.id;settlementCashOptions();q('finSettleLaunch').textContent=fin.numberId||fin.id;q('finSettleDoc').textContent=fin.document||'';q('finSettleType').textContent=`${t.number||''} - ${t.name||''}`;const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));q('finSettleLot').textContent=lot?`${lot.code} - ${lot.description}`:'Não configurado';q('finSettleOriginal').textContent=money40(fin.original);q('finSettleOpen').textContent=money40(open);q('finSettleDate').value=today40();q('finSettleValue').value=money40(open);q('finSettleNature').value='';q('finSettleCash').value='';renderSettlementPreview();q('finSettleModal').classList.add('show')}
-function settlementContext(){const fin=fins40().find(f=>String(f.id)===String(settleFinId));if(!fin)return{error:'Lançamento financeiro não encontrado.'};const t=settlementType(fin);if(!t)return{error:'Tipo de Movimento não encontrado.'};const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));if(!lot)return{error:'Cadastre o Lote de Baixa no Tipo de Movimento.'};const debits=(t.settlementDefaults?.debit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!debits.length)return{error:'Cadastre o Default de Baixa (Débito) no Tipo de Movimento.'};const cash=cash40().find(c=>String(c.id)===String(q('finSettleCash')?.value));if(!cash)return{error:'Selecione a Conta/Caixa da baixa.'};if(!cash.natureCode)return{error:'Cadastre uma Natureza na Conta/Caixa selecionada.'};const nat=nats40().find(n=>String(n.code)===String(cash.natureCode));if(!nat)return{error:'A Natureza vinculada à Conta/Caixa não foi encontrada.'};const credits=(nat.defaults?.credit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!credits.length)return{error:`A Natureza ${nat.code} não possui Default de Crédito.`};const value=parseMoney40(q('finSettleValue')?.value);const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(value<=0)return{error:'Informe um valor de baixa maior que zero.'};if(value>open+.005)return{error:'O valor da baixa não pode ser maior que o saldo em aberto.'};const dp=debits.reduce((s,r)=>s+Number(r.percent??100),0),cp=credits.reduce((s,r)=>s+Number(r.percent??100),0);if(Math.abs(dp-100)>.0001)return{error:`O Default de Baixa deve totalizar 100%. Total atual: ${dp.toLocaleString('pt-BR')}%.`};if(Math.abs(cp-100)>.0001)return{error:`O Default de Crédito da Natureza da Conta/Caixa deve totalizar 100%. Total atual: ${cp.toLocaleString('pt-BR')}%.`};return{fin,t,lot,cash,nat,debits,credits,value,open,date:q('finSettleDate')?.value||today40()}}
+function settlementContext(){const fin=fins40().find(f=>String(f.id)===String(settleFinId));if(!fin)return{error:'Lançamento financeiro não encontrado.'};const t=settlementType(fin);if(!t)return{error:'Tipo de Movimento não encontrado.'};const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));if(!lot)return{error:'Cadastre o Lote de Baixa no Tipo de Movimento.'};const debits=(t.settlementDefaults?.debit||[]).filter(r=>r.account&&Number(r.percent??100)>0);
+if(!debits.length){
+  return{error:`O Tipo de Movimento ${t.number||''} - ${t.name||''} não possui Default de Baixa salvo. Abra o Tipo de Movimento, cadastre o Débito no Default de Baixa e clique em Salvar.`};
+}const cash=cash40().find(c=>String(c.id)===String(q('finSettleCash')?.value));if(!cash)return{error:'Selecione a Conta/Caixa da baixa.'};if(!cash.natureCode)return{error:'Cadastre uma Natureza na Conta/Caixa selecionada.'};const nat=nats40().find(n=>String(n.code)===String(cash.natureCode));if(!nat)return{error:'A Natureza vinculada à Conta/Caixa não foi encontrada.'};const credits=(nat.defaults?.credit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!credits.length)return{error:`A Natureza ${nat.code} não possui Default de Crédito.`};const value=parseMoney40(q('finSettleValue')?.value);const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(value<=0)return{error:'Informe um valor de baixa maior que zero.'};if(value>open+.005)return{error:'O valor da baixa não pode ser maior que o saldo em aberto.'};const dp=debits.reduce((s,r)=>s+Number(r.percent??100),0),cp=credits.reduce((s,r)=>s+Number(r.percent??100),0);if(Math.abs(dp-100)>.0001)return{error:`O Default de Baixa deve totalizar 100%. Total atual: ${dp.toLocaleString('pt-BR')}%.`};if(Math.abs(cp-100)>.0001)return{error:`O Default de Crédito da Natureza da Conta/Caixa deve totalizar 100%. Total atual: ${cp.toLocaleString('pt-BR')}%.`};return{fin,t,lot,cash,nat,debits,credits,value,open,date:q('finSettleDate')?.value||today40()}}
 function renderSettlementPreview(){const ctx=settlementContext(),body=q('finSettlePreview'),warn=q('finSettleWarning');if(!body)return;if(ctx.error){body.innerHTML='<tr><td colspan="5" style="padding:14px;color:#718497">Preencha os dados da baixa para visualizar a contabilização.</td></tr>';warn.textContent=ctx.error;warn.classList.add('show');const c=cash40().find(x=>String(x.id)===String(q('finSettleCash')?.value));q('finSettleNature').value=c?.natureCode||'';return}warn.classList.remove('show');q('finSettleNature').value=`${ctx.nat.code} - ${ctx.nat.description}`;const rows=[];ctx.debits.forEach(r=>rows.push(`<tr><td>Tipo Movimento - Default de Baixa</td><td>${esc40(r.account)} - ${esc40(r.accountDesc||'')}</td><td></td><td>${Number(r.percent??100).toLocaleString('pt-BR')}%</td><td class="num">${money40(ctx.value*Number(r.percent??100)/100)}</td></tr>`));ctx.credits.forEach(r=>rows.push(`<tr><td>Conta/Caixa / Natureza ${esc40(ctx.nat.code)}</td><td></td><td>${esc40(r.account)} - ${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR')}%</td><td class="num">${money40(ctx.value*Number(r.percent??100)/100)}</td></tr>`));body.innerHTML=rows.join('')}
 function nextPartBase(arr){return Math.max(0,...arr.flatMap(e=>(e.parts||[]).map(p=>Number(p.idPart)||0)))}
 function makeSettlementPart(row,side,ctx,idPart){const account=row.account,a=typeof pcByCode==='function'?pcByCode(account):null,cost=row.cost||ctx.fin.cost||'',cc=typeof ccByCode==='function'?ccByCode(cost):null,h=typeof hpByCode==='function'?hpByCode(row.history||''):null,val=Math.round(ctx.value*Number(row.percent??100))/100*100/100;return{idPart,reference:0,document:ctx.fin.document||'',branch:row.branch||'',branchDesc:'',dept:row.dept||'',deptDesc:'',cost,costDesc:cc?.name||ctx.fin.costDesc||'',participant:'',participantDesc:'',debit:side==='debit'?account:'',debitDesc:side==='debit'?(a?.description||row.accountDesc||''):'',debitReduced:side==='debit'?(a?.reduced||''):'',credit:side==='credit'?account:'',creditDesc:side==='credit'?(a?.description||row.accountDesc||''):'',creditReduced:side==='credit'?(a?.reduced||''):'',counter:'',counterDesc:'',value:val,history:row.history||'',historyDesc:h?.description||'',complement:[ctx.fin.document,ctx.fin.party].filter(Boolean).join(', '),system:true,generation:'Baixa Financeira',grouped:false,conciliation:false,conciliation2:false,financialId:ctx.fin.id,cashAccountId:ctx.cash.id,accountingSource:side==='debit'?'Tipo Movimento - Default de Baixa':`Conta/Caixa - Natureza ${ctx.nat.code}`}}
