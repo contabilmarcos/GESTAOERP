@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v41 - Contas/Caixa realmente integrado -->
+<!-- GESTAOERP MCloud v43 - Conta/Caixa selecionável no Movimento -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -2243,6 +2243,92 @@ window.MCLOUD_CONFIG = {
 .cash-nature-link .cash-field{max-width:100%}
 </style>
 
+
+<style id="mv-cash-lookup-v43-css">
+.mv-cash-lookup-modal{
+  width:min(760px,calc(100vw - 50px)) !important;
+  height:min(500px,calc(100vh - 70px)) !important;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+.mv-cash-lookup-filter{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  background:#f8fafc;
+  border-bottom:1px solid #d5e1ea;
+}
+.mv-cash-lookup-filter label{
+  color:#17365e;
+  font-size:12px;
+}
+.mv-cash-lookup-filter input{
+  flex:1;
+  height:30px;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  padding:0 9px;
+  color:#17365e;
+}
+.mv-cash-lookup-grid{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  background:#fff;
+}
+.mv-cash-lookup-grid table{
+  width:100%;
+  border-collapse:collapse;
+  font:12px "Segoe UI",Arial,sans-serif;
+}
+.mv-cash-lookup-grid th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  height:32px;
+  padding:6px 8px;
+  text-align:left;
+  color:#315b7e;
+  background:#f4f8fb;
+  border-bottom:1px solid #d4e0e9;
+}
+.mv-cash-lookup-grid td{
+  height:30px;
+  padding:6px 8px;
+  color:#29475f;
+  border-bottom:1px solid #e6edf2;
+}
+.mv-cash-lookup-grid tr:hover td{background:#eef6fc}
+.mv-cash-lookup-grid tr.selected td{background:#dcecf9}
+.mv-cash-lookup-footer{
+  min-height:55px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  padding:0 12px;
+  border-top:1px solid #d5e1ea;
+  background:#f9fbfd;
+}
+.mv-cash-lookup-footer button{
+  min-width:86px;
+  height:34px;
+  border:1px solid #b9cddd;
+  border-radius:6px;
+  background:#fff;
+  color:#17365e;
+}
+.mv-cash-lookup-footer .primary{
+  border-color:#0b71cf;
+  background:linear-gradient(180deg,#278ee9,#0b72d3);
+  color:#fff;
+  font-weight:700;
+}
+</style>
+
 </head>
 <body>
 
@@ -3724,7 +3810,7 @@ function nextMovementIdentifier(){return Math.max(0,...mvItems.map(x=>Number(x.i
 function nextFinId(){return Math.max(0,...finItems.map(x=>Number(x.numberId)||0))+1}
 function movementFinancials(m){return finItems.filter(f=>String(f.movementId)===String(m.id)).sort((a,b)=>(a.installment||1)-(b.installment||1))}
 function movementFinancial(m){return movementFinancials(m)[0]||null}
-function syncGeneratedFinancial(m){const total=movementTotal(m);if(total<=0)return null;const old=movementFinancials(m),paidMap=new Map(old.map(f=>[Number(f.installment)||1,Number(f.paid)||0])),settlementMap=new Map(old.map(f=>[Number(f.installment)||1,JSON.parse(JSON.stringify(f.settlements||[]))]));finItems=finItems.filter(f=>String(f.movementId)!==String(m.id));const cc=costByCode(m.cost),client=clientById(m.clientId),t=typeById(m.typeId),pay=paymentMethods().find(x=>String(x.id)===String(m.paymentMethodId));let installments=(m.installments||[]).filter(x=>Number(x.value)>0);if(!installments.length)installments=[{due:m.issue,value:total,index:1}];let seq=nextFinId();installments.forEach((it,i)=>finItems.push({id:rmUid(),numberId:seq+i,movementId:m.id,installment:i+1,installmentCount:installments.length,origin:'Movimento',paid:paidMap.get(i+1)||0,settlements:settlementMap.get(i+1)||[],issue:m.issue,document:`${m.number||m.identifier}/${String(i+1).padStart(2,'0')}`,party:client?.name||client?.trade||client?.fantasy||'',partyId:m.clientId||'',cost:m.cost||'',costDesc:cc?.name||'',history:m.finHistory||`MOVIMENTO ${t?.name||t?.number||''} - ${client?.name||client?.trade||client?.fantasy||''}`.trim(),competency:(m.issue||'').slice(0,7),original:Number(it.value)||0,due:it.due||m.issue,nature:m.nature||'',payment:pay?`${pay.code} - ${pay.description}`:(m.paymentMethod||''),paymentMethodId:m.paymentMethodId||'',paymentConditionId:m.paymentConditionId||'',movementTypeId:m.typeId}));saveFin();return movementFinancials(m)}
+function syncGeneratedFinancial(m){const total=movementTotal(m);if(total<=0)return null;const old=movementFinancials(m),paidMap=new Map(old.map(f=>[Number(f.installment)||1,Number(f.paid)||0])),settlementMap=new Map(old.map(f=>[Number(f.installment)||1,JSON.parse(JSON.stringify(f.settlements||[]))]));finItems=finItems.filter(f=>String(f.movementId)!==String(m.id));const cc=costByCode(m.cost),client=clientById(m.clientId),t=typeById(m.typeId),pay=paymentMethods().find(x=>String(x.id)===String(m.paymentMethodId));let installments=(m.installments||[]).filter(x=>Number(x.value)>0);if(!installments.length)installments=[{due:m.issue,value:total,index:1}];let seq=nextFinId();installments.forEach((it,i)=>finItems.push({id:rmUid(),numberId:seq+i,movementId:m.id,installment:i+1,installmentCount:installments.length,origin:'Movimento',paid:paidMap.get(i+1)||0,settlements:settlementMap.get(i+1)||[],issue:m.issue,document:`${m.number||m.identifier}/${String(i+1).padStart(2,'0')}`,party:client?.name||client?.trade||client?.fantasy||'',partyId:m.clientId||'',cost:m.cost||'',costDesc:cc?.name||'',history:m.finHistory||`MOVIMENTO ${t?.name||t?.number||''} - ${client?.name||client?.trade||client?.fantasy||''}`.trim(),competency:(m.issue||'').slice(0,7),original:Number(it.value)||0,due:it.due||m.issue,nature:m.nature||'',payment:pay?`${pay.code} - ${pay.description}`:(m.paymentMethod||''),paymentMethodId:m.paymentMethodId||'',paymentConditionId:m.paymentConditionId||'',cashAccountId:m.cashAccountId||'',cashAccountCode:m.cashAccountCode||'',cashAccountDescription:m.cashAccountDescription||'',cashNatureCode:m.cashNatureCode||'',movementTypeId:m.typeId}));saveFin();return movementFinancials(m)}
 function removeGeneratedFinancial(movementId){finItems=finItems.filter(f=>String(f.movementId)!==String(movementId));saveFin()}
 function fillMovementLookups(){
   // Preserva as seleções atuais. Esta função é chamada também ao abrir a aba Financeira;
@@ -3742,7 +3828,7 @@ function fillMovementLookups(){
 function mvRender(){const q=($('mvSearch')?.value||'').toLowerCase();const arr=mvItems.filter(m=>{const t=typeById(m.typeId),c=clientById(m.clientId);return !q||`${m.identifier} ${t?.number||''} ${t?.name||''} ${m.number||''} ${c?.name||c?.trade||''}`.toLowerCase().includes(q)});$('mvBody').innerHTML=arr.length?arr.map(m=>{const t=typeById(m.typeId),c=clientById(m.clientId);return `<tr data-id="${m.id}" class="${m.id===mvSel?'selected':''}"><td><input type="checkbox" ${m.id===mvSel?'checked':''}></td><td>1</td><td>${m.identifier}</td><td>${esc(t?.number||'')}</td><td>${fmtDate(m.issue)}</td><td>${esc(m.series||'')}</td><td>${esc(m.number||'')}</td><td class="num">${money(movementTotal(m))}</td><td>${esc(c?.code||c?.identifier||'')}</td><td>${esc(c?.name||c?.trade||'')}</td><td>${esc(m.status||'A Faturar')}</td></tr>`}).join(''):`<tr><td colspan="11" class="mv-empty">Nenhum movimento cadastrado.</td></tr>`;$('mvBody').querySelectorAll('tr[data-id]').forEach(tr=>{tr.onclick=()=>{mvSel=Number(tr.dataset.id);mvRender()};tr.ondblclick=()=>mvOpen(Number(tr.dataset.id))});const i=arr.findIndex(x=>x.id===mvSel);$('mvCount').textContent=`${i>=0?i+1:0}/${arr.length}`;return arr}
 function finRender(){const q=($('finSearch')?.value||'').toLowerCase();const arr=finItems.filter(f=>!q||`${f.costDesc||''} ${f.document||''} ${f.history||''} ${f.party||''}`.toLowerCase().includes(q));$('finBody').innerHTML=arr.length?arr.map(f=>`<tr data-id="${f.id}" class="${f.id===finSel?'selected':''}"><td><input type="checkbox" ${f.id===finSel?'checked':''}></td><td>${esc(f.costDesc||'')}</td><td>${fmtDate(f.issue)}</td><td>${esc(f.document||'')}</td><td>${esc(f.history||'')}</td><td>${esc(f.competency||'')}</td><td class="num">${money(f.original)}</td><td class="num">${money(f.paid)}</td><td>${fmtDate(f.due)}</td><td>${f.movementId?'<span class="mv-source">Movimento</span>':'Manual'}</td></tr>`).join(''):`<tr><td colspan="10" class="mv-empty">Nenhum lançamento financeiro cadastrado.</td></tr>`;$('finBody').querySelectorAll('tr[data-id]').forEach(tr=>{tr.onclick=()=>{finSel=Number(tr.dataset.id);finRender()};tr.ondblclick=()=>finOpen(Number(tr.dataset.id))});const i=arr.findIndex(x=>x.id===finSel);$('finCount').textContent=`${i>=0?i+1:0}/${arr.length}`;const o=arr.reduce((s,x)=>s+(Number(x.original)||0),0),p=arr.reduce((s,x)=>s+(Number(x.paid)||0),0);$('finTotalOriginal').textContent=money(o);$('finTotalPaid').textContent=money(p);$('finTotalOpen').textContent=money(o-p);return arr}
 function mvSetPane(name){document.querySelectorAll('[data-mvpane]').forEach(b=>b.classList.toggle('active',b.dataset.mvpane===name));document.querySelectorAll('[data-mvcontent]').forEach(p=>p.classList.toggle('active',p.dataset.mvcontent===name));if(name==='financial')mvRenderFinancialPane();if(name==='finlaunch')mvRenderLinkedFin();if(name==='accounting')mvRenderAccounting()}
-function mvOpen(id=null){fillMovementLookups();mvEdit=id;const src=id?mvItems.find(x=>x.id===id):null;mvDraft=src?JSON.parse(JSON.stringify(src)):{id:rmUid(),identifier:nextMovementIdentifier(),typeId:'',branch:'1',branchName:'',clientId:'',series:'',number:'',issue:today(),exit:today(),cost:'',nature:'',paymentMethodId:'',paymentConditionId:'',finHistory:'',status:'A Faturar',items:[],installments:[],obs:''};mvDraft.installments=mvDraft.installments||[];$('mvTitle').textContent=`Movimento ${src?(typeById(src.typeId)?.number||src.identifier):'<novo>'}`;$('mvBranch').value=mvDraft.branch||'1';$('mvBranchName').value=mvDraft.branchName||'';$('mvType').value=mvDraft.typeId||'';$('mvClient').value=mvDraft.clientId||'';$('mvSeries').value=mvDraft.series||'';$('mvNumber').value=mvDraft.number||'';$('mvIssue').value=mvDraft.issue||today();$('mvExit').value=mvDraft.exit||today();$('mvCost').value=mvDraft.cost||'';$('mvNature').value=mvDraft.nature||'';$('mvFinHistory').value=mvDraft.finHistory||'';$('mvPaymentMethodId').value=mvDraft.paymentMethodId||'';$('mvPaymentConditionId').value=mvDraft.paymentConditionId||'';$('mvObs').value=mvDraft.obs||'';mvItemEdit=null;mvUpdateHeader();mvRenderItems();mvRenderFinancialPane();mvSetPane('header');$('mvModal').classList.add('show')}
+function mvOpen(id=null){fillMovementLookups();mvEdit=id;const src=id?mvItems.find(x=>x.id===id):null;mvDraft=src?JSON.parse(JSON.stringify(src)):{id:rmUid(),identifier:nextMovementIdentifier(),typeId:'',branch:'1',branchName:'',clientId:'',series:'',number:'',issue:today(),exit:today(),cost:'',nature:'',paymentMethodId:'',paymentConditionId:'',cashAccountId:'',finHistory:'',status:'A Faturar',items:[],installments:[],obs:''};mvDraft.installments=mvDraft.installments||[];mvDraft.cashAccountId=mvDraft.cashAccountId||'';$('mvTitle').textContent=`Movimento ${src?(typeById(src.typeId)?.number||src.identifier):'<novo>'}`;$('mvBranch').value=mvDraft.branch||'1';$('mvBranchName').value=mvDraft.branchName||'';$('mvType').value=mvDraft.typeId||'';$('mvClient').value=mvDraft.clientId||'';$('mvSeries').value=mvDraft.series||'';$('mvNumber').value=mvDraft.number||'';$('mvIssue').value=mvDraft.issue||today();$('mvExit').value=mvDraft.exit||today();$('mvCost').value=mvDraft.cost||'';$('mvNature').value=mvDraft.nature||'';$('mvFinHistory').value=mvDraft.finHistory||'';$('mvPaymentMethodId').value=mvDraft.paymentMethodId||'';$('mvPaymentConditionId').value=mvDraft.paymentConditionId||'';$('mvObs').value=mvDraft.obs||'';mvItemEdit=null;mvUpdateHeader();mvRenderItems();mvRenderFinancialPane();mvSetPane('header');$('mvModal').classList.add('show')}
 function mvUpdateHeader(){if(!mvDraft)return;const t=typeById($('mvType').value||mvDraft.typeId),c=clientById($('mvClient').value||mvDraft.clientId);$('mvIdentifierText').textContent=mvDraft.identifier;$('mvTypeText').textContent=t?`${t.number} - ${t.name}`:'—';$('mvStatusText').textContent=mvDraft.status||'A Faturar';$('mvBottomStatus').textContent=mvDraft.status||'A Faturar';$('mvCpfCnpj').value=c?.document||c?.cpfCnpj||c?.cnpjCpf||'';const total=movementTotal(mvDraft);['mvGross','mvSubtotal','mvDocTotal','mvGross2','mvSubtotal2','mvDocTotal2'].forEach(id=>$(id).textContent=money(total));mvRenderAccounting()}
 function mvSyncDraft(){if(!mvDraft)return;Object.assign(mvDraft,{branch:$('mvBranch').value.trim(),branchName:$('mvBranchName').value.trim(),typeId:Number($('mvType').value)||'',clientId:Number($('mvClient').value)||'',series:$('mvSeries').value.trim(),number:$('mvNumber').value.trim(),issue:$('mvIssue').value,exit:$('mvExit').value,cost:$('mvCost').value,nature:$('mvNature').value.trim(),paymentMethodId:$('mvPaymentMethodId')?.value||'',paymentConditionId:$('mvPaymentConditionId')?.value||'',finHistory:$('mvFinHistory').value.trim(),obs:$('mvObs').value});mvUpdateHeader()}
 function mvSave(close=false){mvSyncDraft();if(!mvDraft.typeId)return alert('Selecione o Tipo de Movimento.');if(!mvDraft.clientId)return alert('Selecione o Cliente / Fornecedor.');if(!(mvDraft.items||[]).length)return alert('Inclua ao menos um item no movimento.');for(const item of mvDraft.items){const p=movementItemProduct(item);if(!p)return alert(`O item ${item.product||''} não existe mais no cadastro de Produto/Serviço. Substitua-o antes de salvar.`);item.productId=p.id;item.product=p.code;item.description=p.description||p.name||item.description||'';}if(mvDraft.paymentConditionId&&!(mvDraft.installments||[]).length)return alert('A condição de pagamento foi selecionada. Clique em Gerar para montar as parcelas antes de salvar.');let x=mvItems.find(a=>a.id===mvDraft.id);if(x)Object.assign(x,JSON.parse(JSON.stringify(mvDraft)));else mvItems.push(JSON.parse(JSON.stringify(mvDraft)));mvSel=mvDraft.id;mvEdit=mvDraft.id;saveMov();syncGeneratedFinancial(mvDraft);const acc=syncGeneratedAccounting(mvDraft);mvRender();finRender();mvRenderLinkedFin();mvRenderAccounting();showToast(acc?'Movimento salvo, financeiro e contabilização atualizados':'Movimento salvo. Nenhuma partida contábil configurada.');if(close)$('mvModal').classList.remove('show')}
@@ -3757,12 +3843,130 @@ function mvRenderLinkedFin(){if(!mvDraft)return;const a=movementFinancials(mvDra
 function payCondById(id){return payCondItems.find(x=>String(x.id)===String(id))}
 function payById(id){return paymentMethods().find(x=>String(x.id)===String(id))}
 function addCountedDays(date,days,counting='Dias Corridos'){let d=new Date((date||today())+'T12:00:00'),n=Number(days)||0;if(counting==='Dias Úteis'){let added=0;while(added<n){d.setDate(d.getDate()+1);const wd=d.getDay();if(wd!==0&&wd!==6)added++}}else d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function movementCashAccounts(){return rmLoad('rm_contas_caixa_v39',[]).filter(x=>x.active!==false)}
+function movementCashById(id){return movementCashAccounts().find(x=>String(x.id)===String(id))}
 function mvRenderFinancialPane(){if(!mvDraft||!$('mvInstallmentBody'))return;fillMovementLookups();
   // Garante que a atualização dos combos financeiros nunca altere dados do Cabeçalho.
   if($('mvType'))$('mvType').value=mvDraft.typeId||'';
   if($('mvClient'))$('mvClient').value=mvDraft.clientId||'';
   if($('mvCost'))$('mvCost').value=mvDraft.cost||'';
-  $('mvPaymentMethodId').value=mvDraft.paymentMethodId||$('mvPaymentMethodId').value||'';$('mvPaymentConditionId').value=mvDraft.paymentConditionId||$('mvPaymentConditionId').value||'';const pay=payById($('mvPaymentMethodId').value),pc=payCondById($('mvPaymentConditionId').value);if(pay){const desc=typeof pcByCode==='function'?pcByCode(pay.cash)?.description||'':'';$('mvCashAccount').value=[pay.cash,desc].filter(Boolean).join(' - ')}else $('mvCashAccount').value='';const a=mvDraft.installments||[];$('mvInstallmentBody').innerHTML=a.length?a.map((x,i)=>`<tr><td><input type="checkbox"></td><td>${fmtDate(x.due)}</td><td class="num">${money(x.value)}</td><td>${esc(x.debitCredit||'Entrada')}</td><td>${esc(x.paymentDescription||pay?.description||'')}</td></tr>`).join(''):`<tr><td colspan="5" class="mv-empty">Selecione a forma e a condição de pagamento e clique em Gerar.</td></tr>`;const total=movementTotal(mvDraft);['mvFinGross','mvFinSubtotal','mvFinDoc'].forEach(id=>$(id).textContent=money(total));if(pc?.paymentMethodId&&!$('mvPaymentMethodId').value){$('mvPaymentMethodId').value=String(pc.paymentMethodId);mvDraft.paymentMethodId=String(pc.paymentMethodId)}}
+  $('mvPaymentMethodId').value=mvDraft.paymentMethodId||$('mvPaymentMethodId').value||'';
+  $('mvPaymentConditionId').value=mvDraft.paymentConditionId||$('mvPaymentConditionId').value||'';
+  const pay=payById($('mvPaymentMethodId').value),pc=payCondById($('mvPaymentConditionId').value);
+
+  // Conta/Caixa é um cadastro próprio. Não usa mais pay.cash, que é a
+  // antiga conta contábil configurada no Meio de Pagamento.
+  const cash=movementCashById(mvDraft.cashAccountId);
+  $('mvCashAccount').value=cash?[cash.code,cash.description].filter(Boolean).join(' - '):'';
+
+  const a=mvDraft.installments||[];
+  $('mvInstallmentBody').innerHTML=a.length?a.map((x,i)=>`<tr><td><input type="checkbox"></td><td>${fmtDate(x.due)}</td><td class="num">${money(x.value)}</td><td>${esc(x.debitCredit||'Entrada')}</td><td>${esc(x.paymentDescription||pay?.description||'')}</td></tr>`).join(''):`<tr><td colspan="5" class="mv-empty">Selecione a forma e a condição de pagamento e clique em Gerar.</td></tr>`;
+  const total=movementTotal(mvDraft);
+  ['mvFinGross','mvFinSubtotal','mvFinDoc'].forEach(id=>$(id).textContent=money(total));
+  if(pc?.paymentMethodId&&!$('mvPaymentMethodId').value){
+    $('mvPaymentMethodId').value=String(pc.paymentMethodId);
+    mvDraft.paymentMethodId=String(pc.paymentMethodId);
+  }
+}
+
+let mvCashLookupSelected=null;
+
+function ensureMvCashLookup(){
+  if($('mvCashLookupModal'))return;
+
+  document.body.insertAdjacentHTML('beforeend',`
+    <div class="v9-modal mv-cash-lookup-modal" id="mvCashLookupModal">
+      <div class="v9-title">
+        <span>Conta/Caixa</span>
+        <button id="mvCashLookupClose">×</button>
+      </div>
+      <div class="mv-cash-lookup-filter">
+        <label>Pesquisar:</label>
+        <input id="mvCashLookupSearch" placeholder="Código ou descrição da Conta/Caixa">
+      </div>
+      <div class="mv-cash-lookup-grid">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px">Código</th>
+              <th>Descrição</th>
+              <th style="width:130px">Tipo</th>
+              <th style="width:120px">Natureza</th>
+              <th style="width:120px">Saldo</th>
+            </tr>
+          </thead>
+          <tbody id="mvCashLookupBody"></tbody>
+        </table>
+      </div>
+      <div class="mv-cash-lookup-footer">
+        <button class="primary" id="mvCashLookupOk">OK</button>
+        <button id="mvCashLookupCancel">Cancelar</button>
+      </div>
+    </div>
+  `);
+
+  $('mvCashLookupSearch').oninput=mvCashLookupRender;
+  $('mvCashLookupClose').onclick=$('mvCashLookupCancel').onclick=()=>$('mvCashLookupModal').classList.remove('show');
+  $('mvCashLookupOk').onclick=mvCashLookupChoose;
+}
+
+function mvCashLookupRender(){
+  ensureMvCashLookup();
+  const term=($('mvCashLookupSearch')?.value||'').trim().toLowerCase();
+  const list=movementCashAccounts().filter(c=>
+    !term || [c.code,c.description,c.type,c.natureCode]
+      .some(v=>String(v||'').toLowerCase().includes(term))
+  );
+
+  $('mvCashLookupBody').innerHTML=list.length?list.map(c=>`
+    <tr data-id="${esc(String(c.id))}" class="${String(mvCashLookupSelected)===String(c.id)?'selected':''}">
+      <td>${esc(c.code||'')}</td>
+      <td>${esc(c.description||'')}</td>
+      <td>${esc(c.type||'')}</td>
+      <td>${esc(c.natureCode||'')}</td>
+      <td style="text-align:right">${money(Number(c.instant||0))}</td>
+    </tr>
+  `).join(''):`<tr><td colspan="5" style="padding:24px;text-align:center;color:#718497">Nenhuma Conta/Caixa ativa cadastrada.</td></tr>`;
+
+  $('mvCashLookupBody').querySelectorAll('tr[data-id]').forEach(tr=>{
+    tr.onclick=()=>{
+      mvCashLookupSelected=tr.dataset.id;
+      mvCashLookupRender();
+    };
+    tr.ondblclick=()=>{
+      mvCashLookupSelected=tr.dataset.id;
+      mvCashLookupChoose();
+    };
+  });
+}
+
+function mvCashLookupOpen(){
+  if(!mvDraft)return;
+  ensureMvCashLookup();
+  mvCashLookupSelected=mvDraft.cashAccountId||null;
+  $('mvCashLookupSearch').value='';
+  mvCashLookupRender();
+  $('mvCashLookupModal').classList.add('show');
+  setTimeout(()=>$('mvCashLookupSearch')?.focus(),30);
+}
+
+function mvCashLookupChoose(){
+  const cash=movementCashById(mvCashLookupSelected);
+  if(!cash)return alert('Selecione uma Conta/Caixa.');
+
+  mvDraft.cashAccountId=cash.id;
+  $('mvCashAccount').value=[cash.code,cash.description].filter(Boolean).join(' - ');
+
+  // Guarda também uma cópia descritiva para auditoria do movimento.
+  mvDraft.cashAccountCode=cash.code||'';
+  mvDraft.cashAccountDescription=cash.description||'';
+  mvDraft.cashNatureCode=cash.natureCode||'';
+
+  $('mvCashLookupModal').classList.remove('show');
+  showToast(`Conta/Caixa selecionada: ${cash.code} - ${cash.description}`);
+}
+
+
 function mvGenerateInstallments(){mvSyncDraft();const pc=payCondById(mvDraft.paymentConditionId);if(!pc)return alert('Selecione uma condição de pagamento.');if(!mvDraft.paymentMethodId&&pc.paymentMethodId){mvDraft.paymentMethodId=String(pc.paymentMethodId);$('mvPaymentMethodId').value=String(pc.paymentMethodId)}const pay=payById(mvDraft.paymentMethodId);if(!pay)return alert('Selecione uma forma de pagamento cadastrada.');const total=movementTotal(mvDraft);if(total<=0)return alert('Inclua os itens do movimento antes de gerar as parcelas.');const rows=(pc.composition||[]).filter(r=>Number(r.percent)>0&&Number(r.times)>0);if(!rows.length)return alert('A condição selecionada não possui composição de parcelas.');const pct=rows.reduce((s,r)=>s+Number(r.percent||0),0);if(Math.abs(pct-100)>.001)return alert(`A composição da condição deve totalizar 100%. Total atual: ${pct.toLocaleString('pt-BR')}%.`);const out=[];rows.forEach(r=>{const times=Math.max(1,Number(r.times)||1),partTotal=total*(Number(r.percent)||0)/100,base=Math.floor((partTotal/times)*100)/100;for(let j=0;j<times;j++){const value=j===times-1?Math.round((partTotal-base*(times-1))*100)/100:base;const days=(Number(r.due)||0)+(Number(r.interval)||0)*j;out.push({index:out.length+1,due:addCountedDays(mvDraft.issue,days,r.counting||'Dias Corridos'),value,debitCredit:'Entrada',paymentMethodId:pay.id,paymentDescription:`${pay.code} - ${pay.description}`,type:r.type||'Normal'})}});const sum=out.reduce((a,x)=>a+x.value,0),diff=Math.round((total-sum)*100)/100;if(out.length&&Math.abs(diff)>=.01)out[out.length-1].value=Math.round((out[out.length-1].value+diff)*100)/100;mvDraft.installments=out;mvDraft.paymentMethodId=String(pay.id);mvDraft.paymentConditionId=String(pc.id);mvRenderFinancialPane();showToast(`${out.length} parcela(s) gerada(s)`)}
 function payCondBlankRows(){return Array.from({length:5},(_,i)=>({percent:i===0?100:0,times:i===0?1:0,due:0,interval:0,type:'Normal',counting:'Dias Corridos'}))}
 function payCondRenderCompose(rows){const a=(rows||payCondBlankRows()).slice(0,5);while(a.length<5)a.push({percent:0,times:0,due:0,interval:0,type:'Normal',counting:'Dias Corridos'});$('payCondComposeBody').innerHTML=a.map((r,i)=>`<tr><td>${i+1})</td><td><input class="pct" data-paycondf="percent" data-paycondi="${i}" value="${r.percent??0}"></td><td><input class="times" data-paycondf="times" data-paycondi="${i}" value="${r.times??0}"></td><td><input class="days" data-paycondf="due" data-paycondi="${i}" value="${r.due??0}"></td><td><input class="days" data-paycondf="interval" data-paycondi="${i}" value="${r.interval??0}"></td><td><select class="type" data-paycondf="type" data-paycondi="${i}"><option ${r.type==='Normal'?'selected':''}>Normal</option><option ${r.type==='Entrada'?'selected':''}>Entrada</option></select></td><td><select class="counting" data-paycondf="counting" data-paycondi="${i}"><option ${r.counting!=='Dias Úteis'?'selected':''}>Dias Corridos</option><option ${r.counting==='Dias Úteis'?'selected':''}>Dias Úteis</option></select></td></tr>`).join('')}
@@ -3807,7 +4011,7 @@ document.querySelectorAll('[data-mvpane]').forEach(b=>b.onclick=()=>{mvSyncDraft
 // Mantém o rascunho do Cabeçalho sincronizado enquanto o usuário preenche.
 ['mvBranch','mvBranchName','mvSeries','mvNumber'].forEach(id=>$(id).addEventListener('input',()=>{if(mvDraft)mvSyncDraft()}));
 ['mvType','mvClient','mvIssue','mvExit','mvCost'].forEach(id=>$(id).onchange=()=>{mvSyncDraft();if(id==='mvClient')mvUpdateHeader()});
-$('mvItemNew').onclick=()=>mvItemOpen(null);$('mvItemEdit').onclick=()=>mvItemEdit===null?alert('Selecione um item.'):mvItemOpen(mvItemEdit);$('mvItemDelete').onclick=()=>{if(mvItemEdit===null)return;if(confirm('Excluir o item selecionado?')){mvDraft.items.splice(mvItemEdit,1);mvDraft.installments=[];mvItemEdit=null;mvRenderItems();mvRenderFinancialPane()}};$('mvItemClose').onclick=$('mvItemCancel').onclick=()=>$('mvItemModal').classList.remove('show');$('mvItemOk').onclick=()=>mvItemSave(true);$('mvItemSave').onclick=()=>mvItemSave(false);$('mviProduct').onchange=()=>{const p=prodById($('mviProduct').value);if(p){$('mviDescription').value=p.description||p.name||'';$('mviUnit').value=p.unitSell||p.unitControl||'UN';$('mviPrice').value=p.price?money(parseMoney(p.price)):''}else{$('mviDescription').value='';$('mviUnit').value='UN';$('mviPrice').value=''}mvItemCalc()};$('mviQty').oninput=$('mviPrice').oninput=mvItemCalc;$('mvOpenGeneratedFin').onclick=()=>{const f=movementFinancial(mvDraft);if(f)finOpen(f.id);else alert('Salve o movimento para gerar o lançamento financeiro.')};$('mvPaymentMethodId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentMethodId=$('mvPaymentMethodId').value;mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentConditionId=$('mvPaymentConditionId').value;const pc=payCondById(mvDraft.paymentConditionId);if(pc?.paymentMethodId){mvDraft.paymentMethodId=String(pc.paymentMethodId);$('mvPaymentMethodId').value=String(pc.paymentMethodId)}mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionNew').onclick=()=>payCondOpen();$('mvGenerateInstallments').onclick=mvGenerateInstallments;$('mvPaymentTotals').onclick=()=>alert(`Valor do Documento: ${money(movementTotal(mvDraft))}\nParcelas geradas: ${(mvDraft.installments||[]).length}\nTotal parcelado: ${money((mvDraft.installments||[]).reduce((s,x)=>s+Number(x.value||0),0))}`);$('mvPaymentLookup').onclick=()=>$('mvPaymentMethodId').focus();$('mvCashLookup').onclick=()=>$('mvPaymentMethodId').focus();document.querySelectorAll('[data-paycondtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-paycondtab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-paycondpane]').forEach(p=>p.classList.toggle('active',p.dataset.paycondpane===b.dataset.paycondtab))});$('payCondClose').onclick=$('payCondCancel').onclick=()=>$('payCondModal').classList.remove('show');$('payCondOk').onclick=()=>payCondSaveCondition(true);$('payCondSaveBtn').onclick=()=>payCondSaveCondition(false);
+$('mvItemNew').onclick=()=>mvItemOpen(null);$('mvItemEdit').onclick=()=>mvItemEdit===null?alert('Selecione um item.'):mvItemOpen(mvItemEdit);$('mvItemDelete').onclick=()=>{if(mvItemEdit===null)return;if(confirm('Excluir o item selecionado?')){mvDraft.items.splice(mvItemEdit,1);mvDraft.installments=[];mvItemEdit=null;mvRenderItems();mvRenderFinancialPane()}};$('mvItemClose').onclick=$('mvItemCancel').onclick=()=>$('mvItemModal').classList.remove('show');$('mvItemOk').onclick=()=>mvItemSave(true);$('mvItemSave').onclick=()=>mvItemSave(false);$('mviProduct').onchange=()=>{const p=prodById($('mviProduct').value);if(p){$('mviDescription').value=p.description||p.name||'';$('mviUnit').value=p.unitSell||p.unitControl||'UN';$('mviPrice').value=p.price?money(parseMoney(p.price)):''}else{$('mviDescription').value='';$('mviUnit').value='UN';$('mviPrice').value=''}mvItemCalc()};$('mviQty').oninput=$('mviPrice').oninput=mvItemCalc;$('mvOpenGeneratedFin').onclick=()=>{const f=movementFinancial(mvDraft);if(f)finOpen(f.id);else alert('Salve o movimento para gerar o lançamento financeiro.')};$('mvPaymentMethodId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentMethodId=$('mvPaymentMethodId').value;mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionId').onchange=()=>{if(!mvDraft)return;mvDraft.paymentConditionId=$('mvPaymentConditionId').value;const pc=payCondById(mvDraft.paymentConditionId);if(pc?.paymentMethodId){mvDraft.paymentMethodId=String(pc.paymentMethodId);$('mvPaymentMethodId').value=String(pc.paymentMethodId)}mvDraft.installments=[];mvRenderFinancialPane()};$('mvPaymentConditionNew').onclick=()=>payCondOpen();$('mvGenerateInstallments').onclick=mvGenerateInstallments;$('mvPaymentTotals').onclick=()=>alert(`Valor do Documento: ${money(movementTotal(mvDraft))}\nParcelas geradas: ${(mvDraft.installments||[]).length}\nTotal parcelado: ${money((mvDraft.installments||[]).reduce((s,x)=>s+Number(x.value||0),0))}`);$('mvPaymentLookup').onclick=()=>$('mvPaymentMethodId').focus();$('mvCashLookup').onclick=mvCashLookupOpen;document.querySelectorAll('[data-paycondtab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-paycondtab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-paycondpane]').forEach(p=>p.classList.toggle('active',p.dataset.paycondpane===b.dataset.paycondtab))});$('payCondClose').onclick=$('payCondCancel').onclick=()=>$('payCondModal').classList.remove('show');$('payCondOk').onclick=()=>payCondSaveCondition(true);$('payCondSaveBtn').onclick=()=>payCondSaveCondition(false);
 // Eventos Financeiro
 $('finNew').onclick=()=>finOpen();$('finEdit').onclick=()=>finSel?finOpen(finSel):alert('Selecione um lançamento.');$('finDelete').onclick=finDelete;$('finRefresh').onclick=()=>{finItems=load(FIN_KEY);finRender()};$('finSearchBtn').onclick=()=>{$('finSearch').classList.toggle('show');if($('finSearch').classList.contains('show'))$('finSearch').focus();else{$('finSearch').value='';finRender()}};$('finSearch').oninput=finRender;[['finFirst','first'],['finPrev','prev'],['finNext','next'],['finLast','last']].forEach(([id,w])=>$(id).onclick=()=>{const arr=finRender();moveSelection(arr,finSel,x=>{finSel=x;finRender()},w)});document.querySelectorAll('[data-fintab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-fintab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('[data-fincontent]').forEach(p=>p.classList.toggle('active',p.dataset.fincontent===b.dataset.fintab))});$('finClose').onclick=$('finCancel').onclick=()=>$('finModal').classList.remove('show');$('finOk').onclick=()=>finSave(true);$('finSave').onclick=()=>finSave(false);
 
@@ -4148,7 +4352,8 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
       cashLiquidityDesc:data.liquidityDesc||'',cashOwnerCode:data.ownerCode||'1',cashOwnerDesc:data.ownerDesc||'IADVH',
       cashType:data.type||'',cashBankCode:data.bankCode||'',cashAgency:data.agency||'',cashBankAccount:data.bankAccount||'',
       cashBankDigit:data.bankDigit||'',cashNotes:data.notes||'',cashAgreement:data.agreement||'',cashWallet:data.wallet||'',
-      cashIncludeLotCode:data.includeLotCode||'',cashReverseLotCode:data.reverseLotCode||''
+      cashIncludeLotCode:data.includeLotCode||'',cashReverseLotCode:data.reverseLotCode||'',
+      cashNatureCode:data.natureCode||''
     };
     Object.entries(vals).forEach(([id,v])=>{if(q(id))q(id).value=v});
     q('cashGlobal').checked=!!data.global;
@@ -4206,7 +4411,8 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
       agreement:q('cashAgreement').value.trim(),
       wallet:q('cashWallet').value.trim(),
       includeLotCode:q('cashIncludeLotCode').value.trim(),
-      reverseLotCode:q('cashReverseLotCode').value.trim()
+      reverseLotCode:q('cashReverseLotCode').value.trim(),
+      natureCode:q('cashNatureCode')?.value||''
     });
 
     editing=x.id;
@@ -4446,7 +4652,6 @@ function augmentTMGrid(){const body=q('tmBody');if(!body)return;const table=body
 
 /* ---------------- CONTA / CAIXA + NATUREZA ---------------- */
 function installCashNature(){const pane=document.querySelector('[data-cashpane="accounting"]');if(!pane||q('cashNatureCode'))return;const box=document.createElement('div');box.className='cash-nature-link';box.innerHTML='<div class="cash-field"><label>Natureza Orçamentária/Financeira da Conta/Caixa:</label><select id="cashNatureCode"><option value="">Selecione a natureza...</option></select></div><div style="margin-top:6px;font-size:10px;color:#637a8d">Na baixa financeira, o <b>Crédito</b> será obtido do Default de Crédito desta Natureza.</div>';pane.insertBefore(box,pane.firstChild);fillCashNature();
-  [q('cashSave'),q('cashOk')].forEach(btn=>btn?.addEventListener('click',()=>setTimeout(saveCashNature,0)));
   const modal=q('cashModal');if(modal)new MutationObserver(()=>{if(modal.classList.contains('show'))loadCashNature()}).observe(modal,{attributes:true,attributeFilter:['class']});
 }
 function fillCashNature(){const sel=q('cashNatureCode');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione a natureza...</option>'+nats40().filter(n=>n.type==='analytic'&&!n.inactive).map(n=>`<option value="${esc40(n.code)}">${esc40(n.code)} - ${esc40(n.description)}</option>`).join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}
@@ -4509,7 +4714,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     'rm_tipos_movimento_v1',
     'rm_movimentos_v12',
     'rm_lancamentos_financeiros_v12',
-    'rm_condicoes_pagamento_v15'
+    'rm_condicoes_pagamento_v15',
+    'rm_contas_caixa_v39'
   ]);
 
   const q=id=>document.getElementById(id);
@@ -4748,8 +4954,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     erpStorage.setSyncEnabled(false);
     CLOUD.saveMeta(remote?.version||0,remote?.updatedAt||0);
 
+    let migratedCashAccounts=false;
+
     if(hasKV(remoteKV)){
       erpStorage.replaceManaged(remoteKV);
+
+      // Contas/Caixa foi incorporado ao MCloud na v42.
+      // Se esta conta ainda não possui a chave na nuvem, mas o navegador
+      // possui os dados da versão anterior, migra somente essa chave.
+      if(!Object.prototype.hasOwnProperty.call(remoteKV,'rm_contas_caixa_v39')){
+        try{
+          const oldCash=nativeLocal.getItem('rm_contas_caixa_v39');
+          if(oldCash!==null){
+            erpStorage.setManagedSilent('rm_contas_caixa_v39',oldCash);
+            migratedCashAccounts=true;
+          }
+        }catch(e){}
+      }
     }else if(hasKV(legacy)&&confirm('Encontramos dados da versão antiga neste navegador. Deseja migrá-los agora para sua conta MCloud?')){
       erpStorage.replaceManaged(legacy);migratedLegacy=true;
     }else{
@@ -4763,6 +4984,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
     // New account / empty app state: save the now-initialized ERP state (at least its sequence metadata).
     if(!hasKV(remoteKV))await CLOUD.push({force:Number(remote?.version||0)===0});
+    else if(migratedCashAccounts)await CLOUD.push({force:false});
+
     if(migratedLegacy||hasKV(remoteKV))purgeLegacy();
 
     clearMessage('erpCloudMessage');setStatus('ok','Sincronizado');closeGate();updateAccountUI();
