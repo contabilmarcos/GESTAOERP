@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- GESTAOERP MCloud v38 - resize inline !important definitivo -->
+<!-- GESTAOERP MCloud v40 - Baixa Financeira + Default de Baixa -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -1841,6 +1841,408 @@ window.MCLOUD_CONFIG = {
 }
 </style>
 
+
+<style id="cash-accounts-v39-css">
+/* ===== Contas/Caixa ===== */
+.cash-view{
+  background:#fff !important;
+  overflow:hidden !important;
+}
+.cash-toolbar{
+  height:38px;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  gap:3px;
+  padding:0 8px;
+  border-bottom:1px solid #d5e1ea;
+  background:#fff;
+}
+.cash-toolbar button{
+  min-width:29px;
+  height:28px;
+  border:0;
+  border-radius:5px;
+  background:transparent;
+  color:#0b6fbe;
+  font-size:17px;
+  cursor:pointer;
+}
+.cash-toolbar button:hover{background:#eaf4fd}
+.cash-toolbar .sep{width:1px;height:20px;background:#d6e1e8;margin:0 4px}
+.cash-toolbar .count{font-size:12px;font-weight:600;color:#2e506d;margin:0 5px}
+.cash-toolbar .search{
+  display:none;
+  width:240px;
+  height:26px;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  padding:0 8px;
+  font:12px "Segoe UI",Arial,sans-serif;
+}
+.cash-toolbar .search.show{display:block}
+.cash-layoutbar{
+  height:34px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 8px;
+  border-bottom:1px solid #d7e2ea;
+  background:#fbfdfe;
+  color:#3e607c;
+  font-size:11px;
+}
+.cash-layoutbar button{
+  height:24px;
+  border:0;
+  border-radius:4px;
+  background:transparent;
+  color:#0b6fbe;
+}
+.cash-layoutbar button:hover{background:#eaf4fd}
+.cash-group-hint{
+  height:30px;
+  display:flex;
+  align-items:center;
+  padding:0 8px;
+  background:#f7fbfe;
+  border-bottom:1px solid #d5e1ea;
+  color:#39738e;
+  font-size:11px;
+}
+.cash-grid{
+  height:calc(100% - 102px);
+  overflow:auto;
+  background:#fff;
+}
+.cash-grid table{
+  width:max-content;
+  min-width:100%;
+  border-collapse:collapse;
+  font:11px "Segoe UI",Arial,sans-serif;
+  white-space:nowrap;
+}
+.cash-grid th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  height:30px;
+  padding:5px 7px;
+  text-align:left;
+  background:#f4f8fb;
+  color:#31627f;
+  font-weight:600;
+  border-right:1px solid #d8e3eb;
+  border-bottom:1px solid #cbd9e4;
+}
+.cash-grid td{
+  height:27px;
+  padding:4px 7px;
+  color:#29475f;
+  border-right:1px solid #e4ebf1;
+  border-bottom:1px solid #e8eef3;
+}
+.cash-grid tr:nth-child(even) td{background:#fafcfd}
+.cash-grid tr:hover td{background:#eef6fc}
+.cash-grid tr.selected td{background:#dcecf9}
+.cash-grid .num{text-align:right}
+.cash-grid .center{text-align:center}
+.cash-grid .empty{
+  height:110px;
+  color:#718497;
+  text-align:center;
+}
+
+/* modal Conta/Caixa */
+.cash-modal{
+  width:min(760px,calc(100vw - 60px)) !important;
+  height:min(610px,calc(100vh - 70px)) !important;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+.cash-tabs{
+  min-height:34px;
+  padding:5px 10px 0;
+  display:flex;
+  gap:2px;
+  overflow-x:auto;
+  border-bottom:1px solid #cddbe5;
+  background:#f8fafc;
+}
+.cash-tabs button{
+  height:29px;
+  padding:0 14px;
+  border:1px solid transparent;
+  border-bottom:0;
+  border-radius:6px 6px 0 0;
+  background:transparent;
+  color:#2b5272;
+  font:12px "Segoe UI",Arial,sans-serif;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.cash-tabs button.active{
+  border-color:#c4d5e2;
+  background:#fff;
+  color:#0b6fbe;
+  font-weight:700;
+}
+.cash-pane{
+  display:none;
+  flex:1;
+  min-height:0;
+  overflow:auto;
+  padding:18px 20px;
+  background:#fff;
+}
+.cash-pane.active{display:block}
+.cash-ident-top{
+  display:flex;
+  align-items:center;
+  gap:30px;
+  margin-bottom:14px;
+}
+.cash-check{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  color:#17365e;
+  font-size:12px;
+}
+.cash-form-grid{
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:10px 12px;
+}
+.cash-field{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  min-width:0;
+}
+.cash-field label{
+  font-size:12px;
+  color:#17365e;
+  font-weight:500;
+}
+.cash-field input,
+.cash-field select{
+  width:100%;
+  height:34px;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  padding:0 9px;
+  background:#fff;
+  color:#17365e;
+  font:12px "Segoe UI",Arial,sans-serif;
+  box-sizing:border-box;
+}
+.cash-field input:focus,
+.cash-field select:focus{
+  outline:none;
+  border-color:#2b8fdc;
+  box-shadow:0 0 0 2px rgba(43,143,220,.10);
+}
+.cash-field input[readonly],
+.cash-field input:disabled{
+  background:#f4f7f9;
+  color:#63788c;
+}
+.cash-lookup{
+  display:grid;
+  grid-template-columns:95px minmax(110px,1fr) 34px;
+  gap:5px;
+}
+.cash-lookup.wide-code{grid-template-columns:135px minmax(110px,1fr) 34px}
+.cash-lookup button{
+  height:34px;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  background:#fff;
+  color:#0b6fbe;
+  cursor:pointer;
+}
+.cash-lookup button:hover{background:#edf6fd}
+.cash-group{
+  position:relative;
+  margin-top:16px;
+  padding:22px 12px 12px;
+  border:1px solid #d3e0e9;
+  border-radius:7px;
+  background:#fff;
+}
+.cash-group-title{
+  position:absolute;
+  top:-10px;
+  left:12px;
+  padding:0 6px;
+  background:#fff;
+  color:#17365e;
+  font-size:12px;
+  font-weight:600;
+}
+.cash-group-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.cash-accounting-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.cash-default-actions{
+  display:flex;
+  gap:8px;
+  margin-top:20px;
+}
+.cash-default-actions button{
+  flex:1;
+  height:32px;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  background:#fff;
+  color:#17365e;
+  cursor:pointer;
+}
+.cash-default-actions button:hover{background:#edf6fd}
+.cash-placeholder{
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#73879a;
+  border:1px dashed #d3e0e9;
+  border-radius:7px;
+  background:#fbfdfe;
+}
+.cash-footer{
+  min-height:56px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  padding:0 14px;
+  border-top:1px solid #d3e0e9;
+  background:#f9fbfd;
+}
+.cash-footer button{
+  min-width:88px;
+  height:34px;
+  border:1px solid #b9cddd;
+  border-radius:6px;
+  background:#fff;
+  color:#17365e;
+  cursor:pointer;
+}
+.cash-footer .primary{
+  border-color:#0b71cf;
+  background:linear-gradient(180deg,#278ee9,#0b72d3);
+  color:#fff;
+  font-weight:700;
+}
+
+/* lookup de lotes */
+.cash-lot-lookup{
+  width:min(620px,calc(100vw - 80px)) !important;
+  height:min(430px,calc(100vh - 100px)) !important;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+.cash-lot-filter{
+  min-height:42px;
+  padding:7px 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border-bottom:1px solid #d5e1ea;
+  background:#f8fafc;
+}
+.cash-lot-filter input{
+  flex:1;
+  height:28px;
+  border:1px solid #bfd1df;
+  border-radius:5px;
+  padding:0 8px;
+}
+.cash-lot-grid{
+  flex:1;
+  overflow:auto;
+}
+.cash-lot-grid table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+.cash-lot-grid th{
+  height:30px;
+  padding:5px 8px;
+  text-align:left;
+  background:#f4f8fb;
+  color:#315b7e;
+  border-bottom:1px solid #d5e1ea;
+}
+.cash-lot-grid td{
+  padding:6px 8px;
+  border-bottom:1px solid #e4ebf1;
+}
+.cash-lot-grid tr:hover td{background:#eef6fc}
+.cash-lot-grid tr.selected td{background:#dcecf9}
+</style>
+
+
+<style id="financial-settlement-v40-css">
+/* Tipo Movimento: lote/default de baixa */
+.tm-extra-actions{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.tm-low-modal{width:min(980px,calc(100vw - 60px))!important;height:min(470px,calc(100vh - 70px))!important}
+.tm-low-editor{width:min(700px,calc(100vw - 60px))!important;height:min(500px,calc(100vh - 70px))!important}
+.tm-low-note{margin:10px 12px 0;padding:9px 11px;border:1px solid #d5e3ee;border-radius:6px;background:#f6fbff;color:#47677e;font-size:11px;line-height:1.5}
+.tm-low-grid{flex:1;min-height:0;margin:10px 12px;border:1px solid #d4e1eb;border-radius:6px;overflow:auto;background:#fff}
+.tm-low-grid table{width:100%;border-collapse:collapse;font-size:11px}
+.tm-low-grid th{padding:6px 8px;background:#f4f8fb;color:#315b7e;border-right:1px solid #dde6ed;border-bottom:1px solid #d4e1eb;text-align:left}
+.tm-low-grid td{padding:6px 8px;border-right:1px solid #e4ebf1;border-bottom:1px solid #e7edf2;color:#2b4962}
+.tm-low-grid tr.selected td{background:#dcecf9}
+.tm-low-tools{height:36px;padding:0 12px;display:flex;align-items:center;gap:4px;border-bottom:1px solid #dbe5ec}
+.tm-low-tools button{width:28px;height:28px;border:0;border-radius:5px;background:transparent;color:#0b6fbe;font-size:18px;cursor:pointer}
+.tm-low-tools button:hover{background:#eaf4fd}
+
+/* Processos do financeiro */
+.fin-process-wrap{position:relative;display:inline-flex;align-items:center}
+.fin-process-menu{position:absolute;top:31px;right:0;z-index:8000;display:none;min-width:220px;padding:5px 0;border:1px solid #b8c8d5;border-radius:4px;background:#fff;box-shadow:0 10px 28px rgba(15,42,68,.18);font:12px "Segoe UI",Arial,sans-serif;color:#1f3e59}
+.fin-process-menu.show{display:block}
+.fin-process-item{position:relative;display:flex;align-items:center;justify-content:space-between;min-height:30px;padding:0 12px;cursor:pointer;white-space:nowrap}
+.fin-process-item:hover{background:#dcecf9}
+.fin-process-sub{position:absolute;left:100%;top:-5px;display:none;min-width:250px;padding:5px 0;border:1px solid #b8c8d5;border-radius:4px;background:#fff;box-shadow:0 10px 28px rgba(15,42,68,.18)}
+.fin-process-item:hover>.fin-process-sub{display:block}
+.fin-process-sub button{display:block;width:100%;height:30px;padding:0 12px;border:0;background:#fff;text-align:left;color:#1f3e59;cursor:pointer;font:12px "Segoe UI",Arial,sans-serif}
+.fin-process-sub button:hover{background:#dcecf9}
+.fin-process-sep{height:1px;background:#dce5ec;margin:5px 0}
+
+/* Modal de baixa */
+.fin-settle-modal{width:min(700px,calc(100vw - 50px))!important;height:min(560px,calc(100vh - 60px))!important}
+.fin-settle-body{flex:1;min-height:0;overflow:auto;padding:16px 18px;background:#fff}
+.fin-settle-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;padding:12px;border:1px solid #d4e1eb;border-radius:7px;background:#f8fbfd;margin-bottom:14px}
+.fin-settle-summary div{font-size:11px;color:#567086}.fin-settle-summary b{display:block;margin-top:3px;font-size:13px;color:#17365e}
+.fin-settle-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+.fin-settle-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fin-settle-field label{font-size:11px;font-weight:600;color:#17365e}
+.fin-settle-field input,.fin-settle-field select{height:34px;border:1px solid #bfd1df;border-radius:5px;padding:0 9px;background:#fff;color:#17365e;font:12px "Segoe UI",Arial,sans-serif}
+.fin-settle-preview{margin-top:16px;border:1px solid #d4e1eb;border-radius:7px;overflow:hidden}
+.fin-settle-preview h4{margin:0;padding:8px 10px;background:#f4f8fb;color:#204e74;font-size:12px}
+.fin-settle-preview table{width:100%;border-collapse:collapse;font-size:11px}
+.fin-settle-preview th,.fin-settle-preview td{padding:6px 8px;border-top:1px solid #e2eaf0;border-right:1px solid #e8eef3;text-align:left}
+.fin-settle-preview th{background:#fafcfd;color:#46647d}.fin-settle-preview td.num{text-align:right}
+.fin-settle-warning{margin-top:10px;padding:9px 10px;border:1px solid #e3c781;border-radius:6px;background:#fff9e8;color:#765713;font-size:11px;display:none}
+.fin-settle-warning.show{display:block}
+
+/* Conta/Caixa - vínculo com natureza */
+.cash-nature-link{margin:0 0 14px;padding:14px;border:1px solid #d5e3ee;border-radius:7px;background:#f9fcfe}
+.cash-nature-link .cash-field{max-width:100%}
+</style>
+
 </head>
 <body>
 
@@ -3290,7 +3692,7 @@ function nextMovementIdentifier(){return Math.max(0,...mvItems.map(x=>Number(x.i
 function nextFinId(){return Math.max(0,...finItems.map(x=>Number(x.numberId)||0))+1}
 function movementFinancials(m){return finItems.filter(f=>String(f.movementId)===String(m.id)).sort((a,b)=>(a.installment||1)-(b.installment||1))}
 function movementFinancial(m){return movementFinancials(m)[0]||null}
-function syncGeneratedFinancial(m){const total=movementTotal(m);if(total<=0)return null;const old=movementFinancials(m),paidMap=new Map(old.map(f=>[Number(f.installment)||1,Number(f.paid)||0]));finItems=finItems.filter(f=>String(f.movementId)!==String(m.id));const cc=costByCode(m.cost),client=clientById(m.clientId),t=typeById(m.typeId),pay=paymentMethods().find(x=>String(x.id)===String(m.paymentMethodId));let installments=(m.installments||[]).filter(x=>Number(x.value)>0);if(!installments.length)installments=[{due:m.issue,value:total,index:1}];let seq=nextFinId();installments.forEach((it,i)=>finItems.push({id:rmUid(),numberId:seq+i,movementId:m.id,installment:i+1,installmentCount:installments.length,origin:'Movimento',paid:paidMap.get(i+1)||0,issue:m.issue,document:`${m.number||m.identifier}/${String(i+1).padStart(2,'0')}`,party:client?.name||client?.trade||client?.fantasy||'',partyId:m.clientId||'',cost:m.cost||'',costDesc:cc?.name||'',history:m.finHistory||`MOVIMENTO ${t?.name||t?.number||''} - ${client?.name||client?.trade||client?.fantasy||''}`.trim(),competency:(m.issue||'').slice(0,7),original:Number(it.value)||0,due:it.due||m.issue,nature:m.nature||'',payment:pay?`${pay.code} - ${pay.description}`:(m.paymentMethod||''),paymentMethodId:m.paymentMethodId||'',paymentConditionId:m.paymentConditionId||'',movementTypeId:m.typeId}));saveFin();return movementFinancials(m)}
+function syncGeneratedFinancial(m){const total=movementTotal(m);if(total<=0)return null;const old=movementFinancials(m),paidMap=new Map(old.map(f=>[Number(f.installment)||1,Number(f.paid)||0])),settlementMap=new Map(old.map(f=>[Number(f.installment)||1,JSON.parse(JSON.stringify(f.settlements||[]))]));finItems=finItems.filter(f=>String(f.movementId)!==String(m.id));const cc=costByCode(m.cost),client=clientById(m.clientId),t=typeById(m.typeId),pay=paymentMethods().find(x=>String(x.id)===String(m.paymentMethodId));let installments=(m.installments||[]).filter(x=>Number(x.value)>0);if(!installments.length)installments=[{due:m.issue,value:total,index:1}];let seq=nextFinId();installments.forEach((it,i)=>finItems.push({id:rmUid(),numberId:seq+i,movementId:m.id,installment:i+1,installmentCount:installments.length,origin:'Movimento',paid:paidMap.get(i+1)||0,settlements:settlementMap.get(i+1)||[],issue:m.issue,document:`${m.number||m.identifier}/${String(i+1).padStart(2,'0')}`,party:client?.name||client?.trade||client?.fantasy||'',partyId:m.clientId||'',cost:m.cost||'',costDesc:cc?.name||'',history:m.finHistory||`MOVIMENTO ${t?.name||t?.number||''} - ${client?.name||client?.trade||client?.fantasy||''}`.trim(),competency:(m.issue||'').slice(0,7),original:Number(it.value)||0,due:it.due||m.issue,nature:m.nature||'',payment:pay?`${pay.code} - ${pay.description}`:(m.paymentMethod||''),paymentMethodId:m.paymentMethodId||'',paymentConditionId:m.paymentConditionId||'',movementTypeId:m.typeId}));saveFin();return movementFinancials(m)}
 function removeGeneratedFinancial(movementId){finItems=finItems.filter(f=>String(f.movementId)!==String(movementId));saveFin()}
 function fillMovementLookups(){
   // Preserva as seleções atuais. Esta função é chamada também ao abrir a aba Financeira;
@@ -3780,6 +4182,668 @@ try{if(typeof renderRibbon==='function')renderRibbon()}catch(e){}
 </script>
 
 
+
+
+<script id="cash-accounts-v39">
+(function(){
+  'use strict';
+
+  const CASH_KEY='rm_contas_caixa_v39';
+  let items=rmLoad(CASH_KEY,[]);
+  let selected=null;
+  let editing=null;
+  let visible=[];
+  let lotLookupTarget=null;
+  let lotLookupSelected=null;
+
+  const q=id=>document.getElementById(id);
+  const esc2=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num=v=>Number(v||0);
+  const money=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const parseMoney=v=>{
+    const s=String(v??'').trim();
+    if(!s)return 0;
+    return Number(s.replace(/\./g,'').replace(',','.'))||0;
+  };
+  const today=()=>{
+    try{return rmTodayISO()}catch(e){return new Date().toISOString().slice(0,10)}
+  };
+  const lots=()=>rmLoad('rm_lotes_v1',[]);
+
+  function persist(){rmSave(CASH_KEY,items)}
+
+  function ensureRibbon(){
+    const tabs=window.RM_MODULES?.['Gestão Financeira']?.tabs;
+    if(!tabs)return;
+    tabs['Movimentações Bancárias']=[
+      ['Controle Bancário',[
+        ['Extratos de Caixa','money'],
+        ['Contas/Caixa','doc'],
+        ['Bancos e Agências','grid'],
+        ['Contas Correntes','doc'],
+        ['Convênio','link'],
+        ['Motivos Devolução Cheque','doc'],
+        ['Posição Financeira','chart']
+      ]],
+      ['Moedas',[
+        ['Moedas e Índices','money'],
+        ['Cotações','money'],
+        ['Download de Cotações','doc']
+      ]],
+      ['Integração Bancária',[
+        ['DDA - Débito Direto Autorizado','doc'],
+        ['Conciliação Bancária','grid'],
+        ['Borderô de Pagamentos','doc'],
+        ['Cadastro Bancário','grid'],
+        ['Retorno Bancário','doc'],
+        ['Processos em Lote','doc'],
+        ['Processo Múltiplas Remessas','doc']
+      ]],
+      ['Aplicação Financeira',[
+        ['Aplicação Financeira','chart']
+      ]],
+      ['Cartão de Crédito/Débito',[
+        ['Transações','doc'],
+        ['Conciliação','grid'],
+        ['Mais...','doc']
+      ]]
+    ];
+    try{
+      if(typeof getCurrentRMModule==='function' &&
+         getCurrentRMModule()==='Gestão Financeira' &&
+         typeof activeModule!=='undefined' &&
+         activeModule==='Movimentações Bancárias' &&
+         typeof renderRibbon==='function') renderRibbon();
+    }catch(e){}
+  }
+
+  function buildView(){
+    if(q('cashAccountsView'))return;
+    const main=document.querySelector('main.workspace')||document.querySelector('main');
+    if(!main)return;
+    const s=document.createElement('section');
+    s.className='view cash-view';
+    s.dataset.view='cash-accounts';
+    s.id='cashAccountsView';
+    s.innerHTML=`
+      <div class="cash-toolbar">
+        <button id="cashNew" title="Incluir">＋</button>
+        <button id="cashEdit" title="Editar">✎</button>
+        <button id="cashDelete" title="Excluir">✖</button>
+        <button id="cashRefresh" title="Atualizar">↻</button>
+        <span class="sep"></span>
+        <button id="cashFirst" title="Primeiro">↑</button>
+        <button id="cashPrev" title="Anterior">⌃</button>
+        <button id="cashNext" title="Próximo">⌄</button>
+        <button id="cashLast" title="Último">↓</button>
+        <span class="sep"></span>
+        <button id="cashSearchBtn" title="Pesquisar">⌕</button>
+        <input class="search" id="cashSearch" placeholder="Pesquisar Conta/Caixa...">
+        <span class="count" id="cashCount">0/0</span>
+        <span class="sep"></span>
+        <button>📎</button><span style="font-size:11px">Anexos⌄</span>
+        <button>⚙</button><span style="font-size:11px">Processos⌄</span>
+        <span class="sep"></span><span style="font-size:11px;color:#46677f">▼ [Filtro: Todos]</span>
+      </div>
+      <div class="cash-layoutbar">
+        <span>Layout:</span><b>Padrão⌄</b>
+        <button>▣</button><button>▤</button><button>▥</button><button>▦</button>
+      </div>
+      <div class="cash-group-hint">Arraste aqui o cabeçalho de uma coluna para agrupar</div>
+      <div class="cash-grid">
+        <table>
+          <thead><tr>
+            <th style="width:28px">[x]</th>
+            <th style="width:58px">IMAGEM</th>
+            <th style="width:65px">Coligada</th>
+            <th style="width:105px">Código</th>
+            <th style="min-width:300px">Descrição</th>
+            <th style="width:125px">Saldo Instantâneo</th>
+            <th style="width:130px">Coligada Proprietária</th>
+            <th style="width:135px">Saldo Não Compensado</th>
+            <th style="width:60px">Filial</th>
+            <th style="width:90px">Código Banco</th>
+            <th style="width:125px">Saldo Data de Corte</th>
+            <th style="width:125px">Tipo</th>
+            <th style="width:95px">Liquidez</th>
+            <th style="width:160px">Descrição Liquidez</th>
+            <th style="width:120px">Saldo Bancário</th>
+            <th style="width:110px">Data Base</th>
+          </tr></thead>
+          <tbody id="cashBody"></tbody>
+        </table>
+      </div>`;
+    const execute=main.querySelector('.execute');
+    if(execute)main.insertBefore(s,execute); else main.appendChild(s);
+  }
+
+  function buildModals(){
+    if(q('cashModal'))return;
+    document.body.insertAdjacentHTML('beforeend',`
+      <div class="v9-modal cash-modal" id="cashModal">
+        <div class="v9-title"><span id="cashModalTitle">Conta/Caixa: &lt;novo&gt;</span><button id="cashClose">×</button></div>
+        <div class="v9-mtoolbar">
+          <button>＋</button><button>✖</button><button>↻</button>
+          <button>↑</button><button>⌃</button><button>⌄</button><button>↓</button>
+          <button>⌕</button><span id="cashModalCount">0/0</span>
+          <span class="spacer"></span><button>📎</button><span>Anexos⌄</span><button>⚙</button><span>Processos⌄</span>
+        </div>
+        <div class="cash-tabs">
+          <button class="active" data-cashtab="ident">Identificação</button>
+          <button data-cashtab="additional">Dados Adicionais</button>
+          <button data-cashtab="banking">Integração Bancária</button>
+          <button data-cashtab="accounting">Contabilidade</button>
+          <button data-cashtab="totvs">TOTVS Pagamentos</button>
+        </div>
+
+        <div class="cash-pane active" data-cashpane="ident">
+          <div class="cash-ident-top">
+            <label class="cash-check"><input type="checkbox" id="cashGlobal"> Global</label>
+            <label class="cash-check"><input type="checkbox" id="cashActive" checked> Ativa</label>
+          </div>
+          <div class="cash-form-grid">
+            <div class="cash-field" style="grid-column:span 3"><label>Código:</label><input id="cashCode"></div>
+            <div class="cash-field" style="grid-column:span 9"><label>Descrição:</label><input id="cashDesc"></div>
+
+            <div class="cash-field" style="grid-column:span 12"><label>Filial:</label>
+              <div class="cash-lookup"><input id="cashBranch"><input id="cashBranchDesc" readonly><button type="button" id="cashBranchLookup">...</button></div>
+            </div>
+          </div>
+
+          <div class="cash-accounting-grid">
+            <div>
+              <div class="cash-group"><span class="cash-group-title">Saldos</span>
+                <div class="cash-group-row">
+                  <div class="cash-field"><label>Instantâneo:</label><input id="cashInstant" inputmode="decimal"></div>
+                  <div class="cash-field"><label>Não Compensado:</label><input id="cashUncomp" inputmode="decimal"></div>
+                </div>
+              </div>
+              <div class="cash-group"><span class="cash-group-title">Banco</span>
+                <div class="cash-group-row">
+                  <div class="cash-field"><label>Saldo Bancário:</label><input id="cashBankBalance" inputmode="decimal"></div>
+                  <div class="cash-field"><label>Data do Saldo Bancário:</label><input type="date" id="cashBankDate"></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="cash-group"><span class="cash-group-title">Data Base</span>
+                <div class="cash-group-row">
+                  <div class="cash-field"><label>Saldo na Data Base:</label><input id="cashBaseBalance" inputmode="decimal"></div>
+                  <div class="cash-field"><label>Data Base:</label><input type="date" id="cashBaseDate"></div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px" class="cash-form-grid">
+                <div class="cash-field" style="grid-column:span 12"><label>Moeda:</label>
+                  <div class="cash-lookup"><input id="cashCurrency" value="R$"><input id="cashCurrencyDesc" value="Real"><button type="button">...</button></div>
+                </div>
+                <div class="cash-field" style="grid-column:span 12"><label>Liquidez:</label>
+                  <div class="cash-lookup"><input id="cashLiquidity"><input id="cashLiquidityDesc"><button type="button">...</button></div>
+                </div>
+                <div class="cash-field" style="grid-column:span 12"><label>Coligada Proprietária:</label>
+                  <div class="cash-lookup"><input id="cashOwnerCode" value="1"><input id="cashOwnerDesc" value="IADVH" readonly><button type="button">...</button></div>
+                </div>
+                <div class="cash-field" style="grid-column:span 7"><label>Tipo:</label>
+                  <select id="cashType"><option value=""></option><option>Conta Corrente</option><option>Caixa</option><option>Aplicação Financeira</option><option>Outros</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cash-pane" data-cashpane="additional">
+          <div class="cash-form-grid">
+            <div class="cash-field" style="grid-column:span 6"><label>Código Banco:</label><input id="cashBankCode"></div>
+            <div class="cash-field" style="grid-column:span 6"><label>Agência:</label><input id="cashAgency"></div>
+            <div class="cash-field" style="grid-column:span 6"><label>Conta Bancária:</label><input id="cashBankAccount"></div>
+            <div class="cash-field" style="grid-column:span 6"><label>Dígito:</label><input id="cashBankDigit"></div>
+            <div class="cash-field" style="grid-column:span 12"><label>Observações:</label><input id="cashNotes"></div>
+          </div>
+        </div>
+
+        <div class="cash-pane" data-cashpane="banking">
+          <div class="cash-form-grid">
+            <label class="cash-check" style="grid-column:span 6"><input type="checkbox" id="cashBankIntegration"> Utiliza Integração Bancária</label>
+            <label class="cash-check" style="grid-column:span 6"><input type="checkbox" id="cashConciliation"> Utiliza Conciliação Bancária</label>
+            <div class="cash-field" style="grid-column:span 6"><label>Convênio:</label><input id="cashAgreement"></div>
+            <div class="cash-field" style="grid-column:span 6"><label>Carteira:</label><input id="cashWallet"></div>
+          </div>
+        </div>
+
+        <div class="cash-pane" data-cashpane="accounting">
+          <div class="cash-accounting-grid">
+            <div class="cash-group" style="margin-top:0"><span class="cash-group-title">Defaults Contábeis</span>
+              <div class="cash-default-actions">
+                <button type="button" id="cashDefaultsBtn">Defaults</button>
+                <button type="button" id="cashMutualBtn">Mútuo</button>
+              </div>
+            </div>
+            <div class="cash-group" style="margin-top:0"><span class="cash-group-title">Lotes contábeis do extrato</span>
+              <div class="cash-field"><label>Lote de inclusão do extrato:</label>
+                <div class="cash-lookup"><input id="cashIncludeLotCode"><input id="cashIncludeLotDesc" readonly><button type="button" id="cashIncludeLotBtn">...</button></div>
+              </div>
+              <div class="cash-field" style="margin-top:12px"><label>Lote de estorno do extrato:</label>
+                <div class="cash-lookup"><input id="cashReverseLotCode"><input id="cashReverseLotDesc" readonly><button type="button" id="cashReverseLotBtn">...</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cash-pane" data-cashpane="totvs"><div class="cash-placeholder">Configurações TOTVS Pagamentos.</div></div>
+
+        <div class="cash-footer">
+          <button class="primary" id="cashOk">OK</button>
+          <button id="cashCancel">Cancelar</button>
+          <button id="cashSave">Salvar</button>
+        </div>
+      </div>
+
+      <div class="v9-modal cash-lot-lookup" id="cashLotLookup">
+        <div class="v9-title"><span>Consulta de Lotes Contábeis</span><button id="cashLotClose">×</button></div>
+        <div class="cash-lot-filter"><label>Pesquisar:</label><input id="cashLotSearch"></div>
+        <div class="cash-lot-grid"><table><thead><tr><th>Código</th><th>Descrição</th><th>Data Inicial</th><th>Data Final</th></tr></thead><tbody id="cashLotBody"></tbody></table></div>
+        <div class="cash-footer"><button class="primary" id="cashLotOk">OK</button><button id="cashLotCancel">Cancelar</button></div>
+      </div>
+    `);
+  }
+
+  function render(){
+    const term=(q('cashSearch')?.value||'').trim().toLowerCase();
+    visible=items.filter(x=>!term || [x.code,x.description,x.branch,x.type,x.liquidityDesc,x.bankCode].some(v=>String(v||'').toLowerCase().includes(term)));
+    const body=q('cashBody');
+    if(!body)return;
+
+    body.innerHTML=visible.length?visible.map(x=>`
+      <tr data-id="${esc2(x.id)}" class="${String(selected)===String(x.id)?'selected':''}">
+        <td class="center">□</td>
+        <td class="center">▣</td>
+        <td class="center">${esc2(x.ownerCode||'1')}</td>
+        <td>${esc2(x.code)}</td>
+        <td>${esc2(x.description)}</td>
+        <td class="num">${money(x.instant)}</td>
+        <td class="center">${esc2(x.ownerCode||'1')}</td>
+        <td class="num">${money(x.uncomp)}</td>
+        <td class="center">${esc2(x.branch)}</td>
+        <td>${esc2(x.bankCode)}</td>
+        <td class="num">${money(x.baseBalance)}</td>
+        <td>${esc2(x.type)}</td>
+        <td>${esc2(x.liquidity)}</td>
+        <td>${esc2(x.liquidityDesc)}</td>
+        <td class="num">${money(x.bankBalance)}</td>
+        <td>${x.baseDate?new Date(x.baseDate+'T00:00:00').toLocaleDateString('pt-BR'):''}</td>
+      </tr>`).join(''):`<tr><td colspan="16" class="empty">Nenhuma Conta/Caixa cadastrada.</td></tr>`;
+
+    body.querySelectorAll('tr[data-id]').forEach(tr=>{
+      tr.onclick=()=>{selected=tr.dataset.id;render()};
+      tr.ondblclick=()=>open(tr.dataset.id);
+    });
+
+    const idx=visible.findIndex(x=>String(x.id)===String(selected));
+    q('cashCount').textContent=`${idx>=0?idx+1:0}/${visible.length}`;
+  }
+
+  function syncLotFields(){
+    const list=lots();
+    [['cashIncludeLotCode','cashIncludeLotDesc'],['cashReverseLotCode','cashReverseLotDesc']].forEach(([codeId,descId])=>{
+      const code=q(codeId).value.trim();
+      const lot=list.find(l=>String(l.code)===code);
+      q(descId).value=lot?.description||'';
+    });
+  }
+
+  function open(id=null){
+    editing=id;
+    const x=id?items.find(r=>String(r.id)===String(id)):null;
+    const data=x||{
+      id:rmUid(),global:false,active:true,code:'',description:'',branch:'',branchDesc:'',
+      instant:0,uncomp:0,baseBalance:0,baseDate:today(),bankBalance:0,bankDate:'',
+      currency:'R$',currencyDesc:'Real',liquidity:'',liquidityDesc:'',ownerCode:'1',ownerDesc:'IADVH',
+      type:'',bankCode:'',agency:'',bankAccount:'',bankDigit:'',notes:'',
+      bankIntegration:false,conciliation:false,agreement:'',wallet:'',
+      includeLotCode:'',reverseLotCode:''
+    };
+
+    q('cashModalTitle').textContent=`Conta/Caixa: ${x?x.code:'<novo>'}`;
+    q('cashModalCount').textContent=`${x?Math.max(1,items.findIndex(r=>r.id===x.id)+1):Math.max(1,items.length+1)}/${Math.max(1,items.length)}`;
+
+    const vals={
+      cashCode:data.code||'',cashDesc:data.description||'',cashBranch:data.branch||'',cashBranchDesc:data.branchDesc||'',
+      cashInstant:money(data.instant||0),cashUncomp:money(data.uncomp||0),cashBaseBalance:money(data.baseBalance||0),
+      cashBaseDate:data.baseDate||today(),cashBankBalance:money(data.bankBalance||0),cashBankDate:data.bankDate||'',
+      cashCurrency:data.currency||'R$',cashCurrencyDesc:data.currencyDesc||'Real',cashLiquidity:data.liquidity||'',
+      cashLiquidityDesc:data.liquidityDesc||'',cashOwnerCode:data.ownerCode||'1',cashOwnerDesc:data.ownerDesc||'IADVH',
+      cashType:data.type||'',cashBankCode:data.bankCode||'',cashAgency:data.agency||'',cashBankAccount:data.bankAccount||'',
+      cashBankDigit:data.bankDigit||'',cashNotes:data.notes||'',cashAgreement:data.agreement||'',cashWallet:data.wallet||'',
+      cashIncludeLotCode:data.includeLotCode||'',cashReverseLotCode:data.reverseLotCode||''
+    };
+    Object.entries(vals).forEach(([id,v])=>{if(q(id))q(id).value=v});
+    q('cashGlobal').checked=!!data.global;
+    q('cashActive').checked=data.active!==false;
+    q('cashBankIntegration').checked=!!data.bankIntegration;
+    q('cashConciliation').checked=!!data.conciliation;
+
+    syncLotFields();
+    q('cashTabs')?.querySelectorAll?.('button');
+
+    document.querySelectorAll('[data-cashtab]').forEach((b,i)=>b.classList.toggle('active',i===0));
+    document.querySelectorAll('[data-cashpane]').forEach((p,i)=>p.classList.toggle('active',i===0));
+    q('cashModal').classList.add('show');
+    setTimeout(()=>q('cashCode')?.focus(),40);
+  }
+
+  function close(){q('cashModal').classList.remove('show')}
+
+  function save(closeAfter=false){
+    const code=q('cashCode').value.trim();
+    const description=q('cashDesc').value.trim();
+    if(!code)return alert('Informe o código da Conta/Caixa.');
+    if(!description)return alert('Informe a descrição da Conta/Caixa.');
+    if(items.some(x=>String(x.code).toLowerCase()===code.toLowerCase() && String(x.id)!==String(editing)))return alert('Já existe uma Conta/Caixa com este código.');
+
+    let x=editing?items.find(r=>String(r.id)===String(editing)):null;
+    if(!x){x={id:rmUid()};items.push(x)}
+
+    Object.assign(x,{
+      global:q('cashGlobal').checked,
+      active:q('cashActive').checked,
+      code,description,
+      branch:q('cashBranch').value.trim(),
+      branchDesc:q('cashBranchDesc').value.trim(),
+      instant:parseMoney(q('cashInstant').value),
+      uncomp:parseMoney(q('cashUncomp').value),
+      baseBalance:parseMoney(q('cashBaseBalance').value),
+      baseDate:q('cashBaseDate').value,
+      bankBalance:parseMoney(q('cashBankBalance').value),
+      bankDate:q('cashBankDate').value,
+      currency:q('cashCurrency').value.trim(),
+      currencyDesc:q('cashCurrencyDesc').value.trim(),
+      liquidity:q('cashLiquidity').value.trim(),
+      liquidityDesc:q('cashLiquidityDesc').value.trim(),
+      ownerCode:q('cashOwnerCode').value.trim()||'1',
+      ownerDesc:q('cashOwnerDesc').value.trim()||'IADVH',
+      type:q('cashType').value,
+      bankCode:q('cashBankCode').value.trim(),
+      agency:q('cashAgency').value.trim(),
+      bankAccount:q('cashBankAccount').value.trim(),
+      bankDigit:q('cashBankDigit').value.trim(),
+      notes:q('cashNotes').value.trim(),
+      bankIntegration:q('cashBankIntegration').checked,
+      conciliation:q('cashConciliation').checked,
+      agreement:q('cashAgreement').value.trim(),
+      wallet:q('cashWallet').value.trim(),
+      includeLotCode:q('cashIncludeLotCode').value.trim(),
+      reverseLotCode:q('cashReverseLotCode').value.trim()
+    });
+
+    editing=x.id;
+    selected=x.id;
+    persist();
+    render();
+    showToast('Conta/Caixa salva');
+    if(closeAfter)close();
+    return true;
+  }
+
+  function remove(){
+    if(!selected)return alert('Selecione uma Conta/Caixa.');
+    const x=items.find(r=>String(r.id)===String(selected));
+    if(!x)return;
+    if(confirm(`Excluir a Conta/Caixa ${x.code} - ${x.description}?`)){
+      items=items.filter(r=>String(r.id)!==String(selected));
+      selected=null;
+      persist();
+      render();
+    }
+  }
+
+  function move(which){
+    if(!visible.length)return;
+    let i=visible.findIndex(x=>String(x.id)===String(selected));
+    if(which==='first')i=0;
+    else if(which==='last')i=visible.length-1;
+    else if(which==='prev')i=Math.max(0,(i<0?0:i-1));
+    else if(which==='next')i=Math.min(visible.length-1,(i<0?0:i+1));
+    selected=visible[i]?.id||null;
+    render();
+  }
+
+  function openLotLookup(target){
+    lotLookupTarget=target;
+    lotLookupSelected=null;
+    q('cashLotSearch').value='';
+    renderLotLookup();
+    q('cashLotLookup').classList.add('show');
+  }
+
+  function renderLotLookup(){
+    const term=(q('cashLotSearch')?.value||'').toLowerCase();
+    const rows=lots().filter(l=>!term || [l.code,l.description].some(v=>String(v||'').toLowerCase().includes(term)));
+    q('cashLotBody').innerHTML=rows.length?rows.map(l=>`
+      <tr data-id="${esc2(l.id)}" class="${String(lotLookupSelected)===String(l.id)?'selected':''}">
+        <td>${esc2(l.code)}</td><td>${esc2(l.description)}</td>
+        <td>${esc2(l.start||'')}</td><td>${esc2(l.end||'')}</td>
+      </tr>`).join(''):`<tr><td colspan="4" style="padding:24px;text-align:center;color:#718497">Nenhum lote encontrado.</td></tr>`;
+    q('cashLotBody').querySelectorAll('tr[data-id]').forEach(tr=>{
+      tr.onclick=()=>{lotLookupSelected=tr.dataset.id;renderLotLookup()};
+      tr.ondblclick=()=>chooseLot();
+    });
+  }
+
+  function chooseLot(){
+    const l=lots().find(x=>String(x.id)===String(lotLookupSelected));
+    if(!l)return alert('Selecione um lote.');
+    const prefix=lotLookupTarget==='reverse'?'cashReverse':'cashInclude';
+    q(prefix+'LotCode').value=l.code||'';
+    q(prefix+'LotDesc').value=l.description||'';
+    q('cashLotLookup').classList.remove('show');
+  }
+
+  function bind(){
+    q('cashNew').onclick=()=>open();
+    q('cashEdit').onclick=()=>selected?open(selected):alert('Selecione uma Conta/Caixa.');
+    q('cashDelete').onclick=remove;
+    q('cashRefresh').onclick=()=>{items=rmLoad(CASH_KEY,[]);render()};
+    q('cashFirst').onclick=()=>move('first');
+    q('cashPrev').onclick=()=>move('prev');
+    q('cashNext').onclick=()=>move('next');
+    q('cashLast').onclick=()=>move('last');
+    q('cashSearchBtn').onclick=()=>{
+      q('cashSearch').classList.toggle('show');
+      if(q('cashSearch').classList.contains('show'))q('cashSearch').focus();
+      else{q('cashSearch').value='';render()}
+    };
+    q('cashSearch').oninput=render;
+
+    q('cashClose').onclick=close;
+    q('cashCancel').onclick=close;
+    q('cashOk').onclick=()=>save(true);
+    q('cashSave').onclick=()=>save(false);
+
+    document.querySelectorAll('[data-cashtab]').forEach(b=>b.onclick=()=>{
+      document.querySelectorAll('[data-cashtab]').forEach(x=>x.classList.toggle('active',x===b));
+      document.querySelectorAll('[data-cashpane]').forEach(p=>p.classList.toggle('active',p.dataset.cashpane===b.dataset.cashtab));
+    });
+
+    ['cashInstant','cashUncomp','cashBaseBalance','cashBankBalance'].forEach(id=>{
+      q(id).addEventListener('blur',e=>e.target.value=money(parseMoney(e.target.value)));
+    });
+
+    q('cashIncludeLotCode').addEventListener('input',syncLotFields);
+    q('cashReverseLotCode').addEventListener('input',syncLotFields);
+    q('cashIncludeLotBtn').onclick=()=>openLotLookup('include');
+    q('cashReverseLotBtn').onclick=()=>openLotLookup('reverse');
+
+    q('cashLotSearch').oninput=renderLotLookup;
+    q('cashLotClose').onclick=()=>q('cashLotLookup').classList.remove('show');
+    q('cashLotCancel').onclick=()=>q('cashLotLookup').classList.remove('show');
+    q('cashLotOk').onclick=chooseLot;
+
+    q('cashBranchLookup').onclick=()=>{
+      q('cashBranch').value=q('cashBranch').value||'1';
+      q('cashBranchDesc').value=q('cashBranchDesc').value||'IADVH';
+    };
+
+    q('cashDefaultsBtn').onclick=()=>showToast('Defaults Contábeis da Conta/Caixa');
+    q('cashMutualBtn').onclick=()=>showToast('Configuração de Mútuo da Conta/Caixa');
+  }
+
+  ensureRibbon();
+  buildView();
+  buildModals();
+  bind();
+  render();
+
+  const prevActivate=activateDoc;
+  activateDoc=function(id){
+    if(id==='cash-accounts'){
+      activeDoc=id;
+      renderDocs();
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      q('cashAccountsView')?.classList.add('active');
+      render();
+      const cap=document.querySelector('.caption span:first-child');
+      if(cap)cap.textContent='Conta/Caixa - TOTVS Linha RM - Serviços';
+      return;
+    }
+    return prevActivate(id);
+  };
+
+  const prevOpen=openFunction;
+  openFunction=function(label){
+    const mod=typeof getCurrentRMModule==='function'?getCurrentRMModule():'';
+    if(mod==='Gestão Financeira' && label==='Contas/Caixa'){
+      if(!docs.some(d=>d.id==='cash-accounts'))docs.push({id:'cash-accounts',title:'Conta/Caixa'});
+      activateDoc('cash-accounts');
+      showToast('Contas/Caixa aberto');
+      return;
+    }
+    return prevOpen(label);
+  };
+})();
+</script>
+
+
+<script id="financial-settlement-v40">
+(function(){
+'use strict';
+const TM_KEY='rm_tipos_movimento_v1';
+const LOT_KEY='rm_lotes_v1';
+const NAT_KEY='rm_naturezas_orc_v9';
+const CASH_KEY='rm_contas_caixa_v39';
+const FIN_KEY='rm_lancamentos_financeiros_v12';
+const MOV_KEY='rm_movimentos_v12';
+const ENTRY_KEY='rm_lancamentos_contabeis_v1';
+const q=id=>document.getElementById(id);
+const esc40=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+const money40=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const parseMoney40=v=>{const s=String(v??'').trim();if(!s)return 0;return Number(s.replace(/\./g,'').replace(',','.'))||0};
+const today40=()=>{try{return rmTodayISO()}catch(e){return new Date().toISOString().slice(0,10)}};
+const lots40=()=>rmLoad(LOT_KEY,[]);
+const types40=()=>rmLoad(TM_KEY,[]);
+const nats40=()=>rmLoad(NAT_KEY,[]);
+const cash40=()=>rmLoad(CASH_KEY,[]);
+const fins40=()=>rmLoad(FIN_KEY,[]);
+const movs40=()=>rmLoad(MOV_KEY,[]);
+const entries40=()=>rmLoad(ENTRY_KEY,[]);
+
+/* ---------------- TIPO MOVIMENTO ---------------- */
+let lowDraft=[],lowSel=-1,lowEdit=-1,currentTMId=null;
+function installTMUI(){
+  const modal=q('tmModal'); if(!modal||q('tmSettlementLot'))return;
+  const grid=modal.querySelector('.v9-form-grid');
+  const lotField=q('tmLot')?.closest('.v9-field');
+  if(lotField){
+    const f=document.createElement('div');f.className='v9-field';f.style.gridColumn='1/-1';
+    f.innerHTML='<label>Lote de Baixa:</label><select id="tmSettlementLot"><option value="">Selecione o lote de baixa...</option></select>';
+    lotField.insertAdjacentElement('afterend',f);
+  }
+  const old=q('tmDefaults');
+  if(old){old.textContent='Default Contábil';const wrap=document.createElement('div');wrap.className='tm-extra-actions';old.parentNode.insertBefore(wrap,old);wrap.appendChild(old);const b=document.createElement('button');b.type='button';b.className='tm-default-btn';b.id='tmSettlementDefaults';b.textContent='Default de Baixa';wrap.appendChild(b);b.onclick=openLowDefaults;}
+
+  document.body.insertAdjacentHTML('beforeend',`
+    <div class="v9-modal tm-low-modal" id="tmLowModal">
+      <div class="v9-title"><span>Default de Baixa - Tipo de Movimento</span><button id="tmLowClose">×</button></div>
+      <div class="tm-low-note"><b>Regra da baixa:</b> este default gera sempre o <b>Débito</b>. O Crédito será obtido da Natureza vinculada à Conta/Caixa selecionada na baixa.</div>
+      <div class="tm-low-tools"><button id="tmLowNew">＋</button><button id="tmLowEdit">✎</button><button id="tmLowDelete">✖</button><span style="margin-left:auto;font-size:11px;color:#536f84">Total: <b id="tmLowTotal">0,00</b>%</span></div>
+      <div class="tm-low-grid"><table><thead><tr><th>Conta Débito</th><th>Descrição</th><th>Percentual</th><th>Filial</th><th>Departamento</th><th>Centro de Custo</th><th>Histórico</th><th>Complemento</th></tr></thead><tbody id="tmLowBody"></tbody></table></div>
+      <div class="v9-footer"><button id="tmLowOk">OK</button><button id="tmLowCancel">Cancelar</button><button id="tmLowSave">Salvar</button></div>
+    </div>
+    <div class="v9-modal tm-low-editor" id="tmLowEditModal">
+      <div class="v9-title"><span id="tmLowEditTitle">Default de Baixa - Débito</span><button id="tmLowEditClose">×</button></div>
+      <div class="v9-pane active"><div class="v9-form-grid">
+        <div class="v9-field" style="grid-column:1/-1"><label>Conta Contábil (Débito):</label><div class="v9-lookup"><input id="tmLowAccount" list="v9PcList"><input id="tmLowAccountDesc" class="desc" readonly><button type="button">...</button></div></div>
+        <div class="v9-field" style="grid-column:span 6"><label>Filial:</label><input id="tmLowBranch"></div>
+        <div class="v9-field" style="grid-column:span 6"><label>Departamento:</label><input id="tmLowDept"></div>
+        <div class="v9-field" style="grid-column:1/-1"><label>Centro de Custo:</label><div class="v9-lookup"><input id="tmLowCost" list="v9CcList"><input id="tmLowCostDesc" class="desc" readonly><button type="button">...</button></div></div>
+        <div class="v9-field" style="grid-column:1/-1"><label>Histórico:</label><div class="v9-lookup"><input id="tmLowHist" list="v9HpList"><input id="tmLowHistDesc" class="desc" readonly><button type="button">...</button></div></div>
+        <div class="v9-field" style="grid-column:span 9"><label>Complemento:</label><input id="tmLowComp"></div>
+        <div class="v9-field" style="grid-column:span 3"><label>Percentual:</label><input id="tmLowPercent" type="number" step="0.0001" value="100"></div>
+      </div></div>
+      <div class="v9-footer"><button id="tmLowEditOk">OK</button><button id="tmLowEditCancel">Cancelar</button></div>
+    </div>`);
+
+  q('tmLowClose').onclick=q('tmLowCancel').onclick=()=>q('tmLowModal').classList.remove('show');
+  q('tmLowOk').onclick=()=>{persistTMExtras();q('tmLowModal').classList.remove('show')};
+  q('tmLowSave').onclick=()=>{persistTMExtras();showToast('Default de Baixa salvo')};
+  q('tmLowNew').onclick=()=>openLowEditor(-1);
+  q('tmLowEdit').onclick=()=>lowSel<0?alert('Selecione um default de baixa.'):openLowEditor(lowSel);
+  q('tmLowDelete').onclick=()=>{if(lowSel<0)return alert('Selecione um default de baixa.');if(confirm('Excluir o default de baixa selecionado?')){lowDraft.splice(lowSel,1);lowSel=-1;renderLow()}};
+  q('tmLowEditClose').onclick=q('tmLowEditCancel').onclick=()=>q('tmLowEditModal').classList.remove('show');
+  q('tmLowEditOk').onclick=saveLowEditor;
+  ['tmLowAccount','tmLowCost','tmLowHist'].forEach(id=>q(id).addEventListener('input',lowAutofill));
+
+  [q('tmSave'),q('tmOk')].forEach(btn=>btn?.addEventListener('click',()=>setTimeout(persistTMExtras,0)));
+  q('tmRefresh')?.addEventListener('click',()=>setTimeout(augmentTMGrid,0));
+
+  const mo=new MutationObserver(()=>{if(modal.classList.contains('show'))loadTMExtras()});
+  mo.observe(modal,{attributes:true,attributeFilter:['class']});
+  const body=q('tmBody');if(body)new MutationObserver(augmentTMGrid).observe(body,{childList:true});
+  augmentTMGrid();
+}
+function fillLowLots(){const sel=q('tmSettlementLot');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione o lote de baixa...</option>'+lots40().map(l=>`<option value="${l.id}">${esc40(l.code)} - ${esc40(l.description)}</option>`).join('');if([...sel.options].some(o=>o.value===String(cur)))sel.value=String(cur)}
+function currentTMRecord(){const code=q('tmNumber')?.value.trim();return types40().find(x=>String(x.number)===String(code))||null}
+function loadTMExtras(){fillLowLots();const r=currentTMRecord();currentTMId=r?.id||null;q('tmSettlementLot').value=r?.settlementLotId?String(r.settlementLotId):'';lowDraft=clone(r?.settlementDefaults?.debit||[]);lowSel=-1;augmentTMGrid()}
+function persistTMExtras(){const code=q('tmNumber')?.value.trim();if(!code)return;const arr=types40();const r=arr.find(x=>String(x.number)===String(code));if(!r)return;r.settlementLotId=q('tmSettlementLot')?.value?Number(q('tmSettlementLot').value):null;r.settlementDefaults={debit:clone(lowDraft)};rmSave(TM_KEY,arr);currentTMId=r.id;augmentTMGrid()}
+function renderLow(){const body=q('tmLowBody');if(!body)return;body.innerHTML=lowDraft.length?lowDraft.map((r,i)=>`<tr data-i="${i}" class="${i===lowSel?'selected':''}"><td>${esc40(r.account||'')}</td><td>${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR',{minimumFractionDigits:4})}</td><td>${esc40(r.branch||'')}</td><td>${esc40(r.dept||'')}</td><td>${esc40(r.cost||'')}</td><td>${esc40(r.history||'')}</td><td>${esc40(r.complement||'')}</td></tr>`).join(''):'<tr><td colspan="8" style="padding:20px;color:#718497">Nenhum Default de Baixa cadastrado.</td></tr>';body.querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>{lowSel=Number(tr.dataset.i);renderLow()});q('tmLowTotal').textContent=lowDraft.reduce((s,r)=>s+Number(r.percent??100),0).toLocaleString('pt-BR',{minimumFractionDigits:2})}
+function openLowDefaults(){loadTMExtras();renderLow();q('tmLowModal').classList.add('show')}
+function openLowEditor(i){lowEdit=i;const r=i>=0?lowDraft[i]:{};q('tmLowAccount').value=r.account||'';q('tmLowBranch').value=r.branch||'';q('tmLowDept').value=r.dept||'';q('tmLowCost').value=r.cost||'';q('tmLowHist').value=r.history||'';q('tmLowComp').value=r.complement||'';q('tmLowPercent').value=r.percent??100;lowAutofill();q('tmLowEditModal').classList.add('show')}
+function lowAutofill(){const a=typeof pcByCode==='function'?pcByCode(q('tmLowAccount').value.trim()):null,c=typeof ccByCode==='function'?ccByCode(q('tmLowCost').value.trim()):null,h=typeof hpByCode==='function'?hpByCode(q('tmLowHist').value.trim()):null;q('tmLowAccountDesc').value=a?.description||'';q('tmLowCostDesc').value=c?.name||'';q('tmLowHistDesc').value=h?.description||''}
+function saveLowEditor(){const account=q('tmLowAccount').value.trim(),percent=Number(q('tmLowPercent').value)||0;if(!account)return alert('Informe a conta contábil de Débito.');if(percent<=0)return alert('Informe um percentual maior que zero.');const a=typeof pcByCode==='function'?pcByCode(account):null;if(a?.type&&a.type!=='analytic')return alert('Selecione uma conta analítica.');const r={account,accountDesc:a?.description||'',branch:q('tmLowBranch').value.trim(),dept:q('tmLowDept').value.trim(),cost:q('tmLowCost').value.trim(),history:q('tmLowHist').value.trim(),complement:q('tmLowComp').value.trim(),percent};if(lowEdit>=0)lowDraft[lowEdit]=r;else lowDraft.push(r);lowSel=lowEdit>=0?lowEdit:lowDraft.length-1;renderLow();q('tmLowEditModal').classList.remove('show')}
+function augmentTMGrid(){const body=q('tmBody');if(!body)return;const table=body.closest('table'),head=table?.querySelector('thead tr');if(head&&!head.querySelector('[data-low-col]')){const a=document.createElement('th');a.dataset.lowCol='1';a.textContent='Cód. Lote Baixa';a.style.width='130px';const b=document.createElement('th');b.dataset.lowCol='1';b.textContent='Lote de Baixa';head.append(a,b)}const arr=types40();body.querySelectorAll('tr[data-id]').forEach(tr=>{if(tr.querySelector('[data-low-cell]'))return;const r=arr.find(x=>String(x.id)===String(tr.dataset.id)),lot=lots40().find(l=>String(l.id)===String(r?.settlementLotId));const a=document.createElement('td');a.dataset.lowCell='1';a.textContent=lot?.code||'';const b=document.createElement('td');b.dataset.lowCell='1';b.textContent=lot?`${lot.code} - ${lot.description}`:'';tr.append(a,b)});const empty=body.querySelector('tr:not([data-id]) td[colspan]');if(empty)empty.colSpan=7}
+
+/* ---------------- CONTA / CAIXA + NATUREZA ---------------- */
+function installCashNature(){const pane=document.querySelector('[data-cashpane="accounting"]');if(!pane||q('cashNatureCode'))return;const box=document.createElement('div');box.className='cash-nature-link';box.innerHTML='<div class="cash-field"><label>Natureza Orçamentária/Financeira da Conta/Caixa:</label><select id="cashNatureCode"><option value="">Selecione a natureza...</option></select></div><div style="margin-top:6px;font-size:10px;color:#637a8d">Na baixa financeira, o <b>Crédito</b> será obtido do Default de Crédito desta Natureza.</div>';pane.insertBefore(box,pane.firstChild);fillCashNature();
+  [q('cashSave'),q('cashOk')].forEach(btn=>btn?.addEventListener('click',()=>setTimeout(saveCashNature,0)));
+  const modal=q('cashModal');if(modal)new MutationObserver(()=>{if(modal.classList.contains('show'))loadCashNature()}).observe(modal,{attributes:true,attributeFilter:['class']});
+}
+function fillCashNature(){const sel=q('cashNatureCode');if(!sel)return;const cur=sel.value;sel.innerHTML='<option value="">Selecione a natureza...</option>'+nats40().filter(n=>n.type==='analytic'&&!n.inactive).map(n=>`<option value="${esc40(n.code)}">${esc40(n.code)} - ${esc40(n.description)}</option>`).join('');if([...sel.options].some(o=>o.value===cur))sel.value=cur}
+function cashCurrentRecord(){const code=q('cashCode')?.value.trim();return cash40().find(x=>String(x.code)===String(code))||null}
+function loadCashNature(){fillCashNature();q('cashNatureCode').value=cashCurrentRecord()?.natureCode||''}
+function saveCashNature(){const code=q('cashCode')?.value.trim();if(!code)return;const arr=cash40(),r=arr.find(x=>String(x.code)===String(code));if(!r)return;r.natureCode=q('cashNatureCode')?.value||'';rmSave(CASH_KEY,arr)}
+
+/* ---------------- PROCESSOS > BAIXA ---------------- */
+let settleFinId=null;
+function installFinancialProcess(){const tb=q('finNew')?.closest('.mv-toolbar');if(!tb||q('finProcessesBtn'))return;tb.style.position='relative';const btn=[...tb.querySelectorAll('button')].find(b=>(b.textContent||'').includes('Processos'));if(!btn)return;btn.id='finProcessesBtn';const wrap=document.createElement('span');wrap.className='fin-process-wrap';btn.parentNode.insertBefore(wrap,btn);wrap.appendChild(btn);wrap.insertAdjacentHTML('beforeend',`<div class="fin-process-menu" id="finProcessMenu"><div class="fin-process-item">Cancelamento de Remessa</div><div class="fin-process-item">Borderô de Pagamentos <span>›</span></div><div class="fin-process-item">Boleto <span>›</span></div><div class="fin-process-item">Baixa <span>›</span><div class="fin-process-sub"><button id="finProcessSettle">Baixar Lançamento</button><button disabled>Baixar Créditos/Devoluções Vinculados</button><button disabled>Baixa Com Perda Financeira</button><button disabled>Importação de Baixa</button><button disabled>Contabilizar Lançamentos Baixados</button></div></div><div class="fin-process-sep"></div><div class="fin-process-item">Relatórios</div></div>`);btn.onclick=e=>{e.stopPropagation();q('finProcessMenu').classList.toggle('show')};q('finProcessSettle').onclick=e=>{e.stopPropagation();q('finProcessMenu').classList.remove('show');openSettlement()};document.addEventListener('click',e=>{if(!wrap.contains(e.target))q('finProcessMenu')?.classList.remove('show')});
+
+  document.body.insertAdjacentHTML('beforeend',`<div class="mv-modal fin-settle-modal" id="finSettleModal"><div class="mv-title"><span>Baixa de Lançamento</span><button id="finSettleClose">×</button></div><div class="fin-settle-body"><div class="fin-settle-summary"><div>Lançamento<b id="finSettleLaunch">—</b></div><div>Documento<b id="finSettleDoc">—</b></div><div>Tipo de Movimento<b id="finSettleType">—</b></div><div>Lote de Baixa<b id="finSettleLot">—</b></div><div>Valor Original<b id="finSettleOriginal">0,00</b></div><div>Saldo em Aberto<b id="finSettleOpen">0,00</b></div></div><div class="fin-settle-grid"><div class="fin-settle-field" style="grid-column:span 7"><label>Conta/Caixa:</label><select id="finSettleCash"><option value="">Selecione...</option></select></div><div class="fin-settle-field" style="grid-column:span 5"><label>Data da Baixa:</label><input type="date" id="finSettleDate"></div><div class="fin-settle-field" style="grid-column:span 5"><label>Valor da Baixa:</label><input id="finSettleValue" inputmode="decimal"></div><div class="fin-settle-field" style="grid-column:span 7"><label>Natureza da Conta/Caixa:</label><input id="finSettleNature" readonly></div></div><div class="fin-settle-preview"><h4>Contabilização da Baixa</h4><table><thead><tr><th>Origem</th><th>Débito</th><th>Crédito</th><th>Percentual</th><th>Valor</th></tr></thead><tbody id="finSettlePreview"></tbody></table></div><div class="fin-settle-warning" id="finSettleWarning"></div></div><div class="mv-footer"><button id="finSettleOk">OK</button><button id="finSettleCancel">Cancelar</button><button id="finSettleSave">Baixar</button></div></div>`);
+  q('finSettleClose').onclick=q('finSettleCancel').onclick=()=>q('finSettleModal').classList.remove('show');q('finSettleCash').onchange=renderSettlementPreview;q('finSettleValue').oninput=renderSettlementPreview;q('finSettleSave').onclick=()=>executeSettlement(false);q('finSettleOk').onclick=()=>executeSettlement(true);
+}
+function selectedFinancial(){const tr=q('finBody')?.querySelector('tr.selected[data-id]');if(!tr)return null;return fins40().find(f=>String(f.id)===String(tr.dataset.id))||null}
+function settlementType(fin){let typeId=fin?.movementTypeId; if(!typeId&&fin?.movementId){const m=movs40().find(x=>String(x.id)===String(fin.movementId));typeId=m?.typeId}return types40().find(t=>String(t.id)===String(typeId))||null}
+function settlementCashOptions(){const sel=q('finSettleCash');sel.innerHTML='<option value="">Selecione...</option>'+cash40().filter(c=>c.active!==false).map(c=>`<option value="${esc40(c.id)}">${esc40(c.code)} - ${esc40(c.description)}</option>`).join('')}
+function openSettlement(){const fin=selectedFinancial();if(!fin)return alert('Selecione um lançamento financeiro.');const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(open<=.005)return alert('Este lançamento já está totalmente baixado.');const t=settlementType(fin);if(!t)return alert('O lançamento selecionado não possui Tipo de Movimento de origem.');settleFinId=fin.id;settlementCashOptions();q('finSettleLaunch').textContent=fin.numberId||fin.id;q('finSettleDoc').textContent=fin.document||'';q('finSettleType').textContent=`${t.number||''} - ${t.name||''}`;const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));q('finSettleLot').textContent=lot?`${lot.code} - ${lot.description}`:'Não configurado';q('finSettleOriginal').textContent=money40(fin.original);q('finSettleOpen').textContent=money40(open);q('finSettleDate').value=today40();q('finSettleValue').value=money40(open);q('finSettleNature').value='';q('finSettleCash').value='';renderSettlementPreview();q('finSettleModal').classList.add('show')}
+function settlementContext(){const fin=fins40().find(f=>String(f.id)===String(settleFinId));if(!fin)return{error:'Lançamento financeiro não encontrado.'};const t=settlementType(fin);if(!t)return{error:'Tipo de Movimento não encontrado.'};const lot=lots40().find(l=>String(l.id)===String(t.settlementLotId));if(!lot)return{error:'Cadastre o Lote de Baixa no Tipo de Movimento.'};const debits=(t.settlementDefaults?.debit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!debits.length)return{error:'Cadastre o Default de Baixa (Débito) no Tipo de Movimento.'};const cash=cash40().find(c=>String(c.id)===String(q('finSettleCash')?.value));if(!cash)return{error:'Selecione a Conta/Caixa da baixa.'};if(!cash.natureCode)return{error:'Cadastre uma Natureza na Conta/Caixa selecionada.'};const nat=nats40().find(n=>String(n.code)===String(cash.natureCode));if(!nat)return{error:'A Natureza vinculada à Conta/Caixa não foi encontrada.'};const credits=(nat.defaults?.credit||[]).filter(r=>r.account&&Number(r.percent??100)>0);if(!credits.length)return{error:`A Natureza ${nat.code} não possui Default de Crédito.`};const value=parseMoney40(q('finSettleValue')?.value);const open=Math.max(0,Number(fin.original||0)-Number(fin.paid||0));if(value<=0)return{error:'Informe um valor de baixa maior que zero.'};if(value>open+.005)return{error:'O valor da baixa não pode ser maior que o saldo em aberto.'};const dp=debits.reduce((s,r)=>s+Number(r.percent??100),0),cp=credits.reduce((s,r)=>s+Number(r.percent??100),0);if(Math.abs(dp-100)>.0001)return{error:`O Default de Baixa deve totalizar 100%. Total atual: ${dp.toLocaleString('pt-BR')}%.`};if(Math.abs(cp-100)>.0001)return{error:`O Default de Crédito da Natureza da Conta/Caixa deve totalizar 100%. Total atual: ${cp.toLocaleString('pt-BR')}%.`};return{fin,t,lot,cash,nat,debits,credits,value,open,date:q('finSettleDate')?.value||today40()}}
+function renderSettlementPreview(){const ctx=settlementContext(),body=q('finSettlePreview'),warn=q('finSettleWarning');if(!body)return;if(ctx.error){body.innerHTML='<tr><td colspan="5" style="padding:14px;color:#718497">Preencha os dados da baixa para visualizar a contabilização.</td></tr>';warn.textContent=ctx.error;warn.classList.add('show');const c=cash40().find(x=>String(x.id)===String(q('finSettleCash')?.value));q('finSettleNature').value=c?.natureCode||'';return}warn.classList.remove('show');q('finSettleNature').value=`${ctx.nat.code} - ${ctx.nat.description}`;const rows=[];ctx.debits.forEach(r=>rows.push(`<tr><td>Tipo Movimento - Default de Baixa</td><td>${esc40(r.account)} - ${esc40(r.accountDesc||'')}</td><td></td><td>${Number(r.percent??100).toLocaleString('pt-BR')}%</td><td class="num">${money40(ctx.value*Number(r.percent??100)/100)}</td></tr>`));ctx.credits.forEach(r=>rows.push(`<tr><td>Conta/Caixa / Natureza ${esc40(ctx.nat.code)}</td><td></td><td>${esc40(r.account)} - ${esc40(r.accountDesc||'')}</td><td>${Number(r.percent??100).toLocaleString('pt-BR')}%</td><td class="num">${money40(ctx.value*Number(r.percent??100)/100)}</td></tr>`));body.innerHTML=rows.join('')}
+function nextPartBase(arr){return Math.max(0,...arr.flatMap(e=>(e.parts||[]).map(p=>Number(p.idPart)||0)))}
+function makeSettlementPart(row,side,ctx,idPart){const account=row.account,a=typeof pcByCode==='function'?pcByCode(account):null,cost=row.cost||ctx.fin.cost||'',cc=typeof ccByCode==='function'?ccByCode(cost):null,h=typeof hpByCode==='function'?hpByCode(row.history||''):null,val=Math.round(ctx.value*Number(row.percent??100))/100*100/100;return{idPart,reference:0,document:ctx.fin.document||'',branch:row.branch||'',branchDesc:'',dept:row.dept||'',deptDesc:'',cost,costDesc:cc?.name||ctx.fin.costDesc||'',participant:'',participantDesc:'',debit:side==='debit'?account:'',debitDesc:side==='debit'?(a?.description||row.accountDesc||''):'',debitReduced:side==='debit'?(a?.reduced||''):'',credit:side==='credit'?account:'',creditDesc:side==='credit'?(a?.description||row.accountDesc||''):'',creditReduced:side==='credit'?(a?.reduced||''):'',counter:'',counterDesc:'',value:val,history:row.history||'',historyDesc:h?.description||'',complement:[ctx.fin.document,ctx.fin.party].filter(Boolean).join(', '),system:true,generation:'Baixa Financeira',grouped:false,conciliation:false,conciliation2:false,financialId:ctx.fin.id,cashAccountId:ctx.cash.id,accountingSource:side==='debit'?'Tipo Movimento - Default de Baixa':`Conta/Caixa - Natureza ${ctx.nat.code}`}}
+function executeSettlement(closeAfter){const ctx=settlementContext();if(ctx.error){renderSettlementPreview();return alert(ctx.error)}const entries=entries40();let pId=nextPartBase(entries)+1;const parts=[];ctx.debits.forEach(r=>parts.push(makeSettlementPart(r,'debit',ctx,pId++)));ctx.credits.forEach(r=>parts.push(makeSettlementPart(r,'credit',ctx,pId++)));const debit=parts.filter(p=>p.debit).reduce((s,p)=>s+Number(p.value||0),0),credit=parts.filter(p=>p.credit).reduce((s,p)=>s+Number(p.value||0),0);if(Math.abs(debit-credit)>.005)return alert(`A contabilização da baixa não está balanceada.\nDébitos: ${money40(debit)}\nCréditos: ${money40(credit)}`);let idNumber;try{idNumber=typeof nextEntryId==='function'?nextEntryId():Math.max(0,...entries.map(e=>Number(e.idNumber)||0))+1}catch(e){return}const entry={id:rmUid(),idNumber,lotId:Number(ctx.lot.id),description:`BAIXA ${ctx.fin.document||ctx.fin.numberId||''} - ${ctx.fin.party||''}`.trim(),date:ctx.date,parts,attachments:[],financialId:ctx.fin.id,generation:'Baixa Financeira',cashAccountId:ctx.cash.id};entries.push(entry);rmSave(ENTRY_KEY,entries);const fins=fins40(),fin=fins.find(f=>String(f.id)===String(ctx.fin.id));fin.paid=Math.min(Number(fin.original||0),Number(fin.paid||0)+ctx.value);fin.settlements=fin.settlements||[];fin.settlements.push({id:rmUid(),date:ctx.date,value:ctx.value,cashAccountId:ctx.cash.id,cashCode:ctx.cash.code,natureCode:ctx.nat.code,typeId:ctx.t.id,lotId:ctx.lot.id,accountingEntryId:entry.id,accountingIdNumber:idNumber});rmSave(FIN_KEY,fins);try{if(typeof entryItems!=='undefined'){entryItems=rmLoad(ENTRY_KEY,[])}if(typeof lotRender==='function')lotRender()}catch(e){}q('finRefresh')?.click();showToast(`Baixa realizada e contabilizada no lote ${ctx.lot.code}`);if(closeAfter)q('finSettleModal').classList.remove('show');else{q('finSettleModal').classList.remove('show')}}
+
+function boot40(){installTMUI();installCashNature();installFinancialProcess()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot40,{once:true});else boot40();
+})();
+</script>
 
 <script id="erp-window-manager-v38">
 (function(){
